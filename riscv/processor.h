@@ -240,6 +240,28 @@ struct state_t
   reg_t satp;
   reg_t scause;
 
+  //ibda stuff - state reset zeros everything
+  size_t rd;
+  size_t rs1;
+  size_t rs2;
+  size_t rs_sp;
+  bool store;
+  bool load;
+  bool amo;
+  reg_t rdt[32];
+  reg_t a_cnt;
+  reg_t b_cnt;
+  reg_t load_cnt;
+  reg_t store_cnt;
+  reg_t agi_cnt;
+  reg_t load_store_cnt;
+
+  void init_ibda();
+  void update_ibda(insn_t insn, processor_t* p);
+  bool in_ist(reg_t addr);
+  void ist_add(reg_t addr);
+
+
   reg_t dpc;
   reg_t dscratch0, dscratch1;
   dcsr_t dcsr;
@@ -431,7 +453,6 @@ private:
   simif_t* sim;
   mmu_t* mmu; // main memory is always accessed via the mmu
   extension_t* ext;
-  disassembler_t* disassembler;
   state_t state;
   uint32_t id;
   unsigned max_xlen;
@@ -469,6 +490,7 @@ private:
   // Track repeated executions for processor_t::disasm()
   uint64_t last_pc, last_bits, executions;
 public:
+  disassembler_t* disassembler;
   vectorUnit_t VU;
 };
 

@@ -196,6 +196,66 @@ void state_t::reset(reg_t max_isa)
   pmpaddr[0] = ~reg_t(0);
 }
 
+void state_t::init_ibda(){
+    rd = 0;
+    rs1 = 0;
+    rs2 = 0;
+    rs_sp = 0;
+    store = false;
+    load = false;
+    amo = false;
+  }
+
+  bool state_t::in_ist(reg_t addr){
+    return false;
+  }
+  void state_t::ist_add(reg_t addr){
+    return;
+  };
+
+  void state_t::update_ibda(insn_t insn, processor_t* p){
+    bool agi = in_ist(pc);
+    bool ibda = (load || store || agi) && !amo;
+//    fprintf(stderr, "b: %d, a: %d\n", a_cnt, b_cnt);
+    if(rs1){
+        ist_add(rdt[rs1]);
+    }
+    if(rs2){
+        ist_add(rdt[rs2]);
+    }
+    if(rs_sp){
+        ist_add(rdt[rs_sp]);
+    }
+    // write rdt last
+    if(rd){
+        rdt[rd] = pc;
+    }
+    if(load && !amo){
+        load_cnt++;
+        uint64_t bits = insn.bits() & ((1ULL << (8 * insn_length(insn.bits()))) - 1);
+        fprintf(stderr, "load: 0x%016" PRIx64 " (0x%08" PRIx64 ") %s\n",
+                    pc, bits, p->disassembler->disassemble(insn).c_str());
+    }
+    if(store && !amo){
+        store_cnt++;
+        uint64_t bits = insn.bits() & ((1ULL << (8 * insn_length(insn.bits()))) - 1);
+        fprintf(stderr, "store: 0x%016" PRIx64 " (0x%08" PRIx64 ") %s\n",
+                    pc, bits, p->disassembler->disassemble(insn).c_str());
+    }
+    if(agi){
+        agi_cnt++;
+    }
+    if(store && load && !amo){
+        load_store_cnt++;
+    }
+    // update counter
+    if(ibda){
+        b_cnt++;
+    } else {
+        a_cnt++;
+    }
+  }
+
 void vectorUnit_t::reset(){
   free(reg_file);
   VLEN = get_vlen();
@@ -696,6 +756,21 @@ reg_t processor_t::get_csr(int which)
   if (state.prv < PRV_S)
     ctr_en &= state.scounteren;
   bool ctr_ok = (ctr_en >> (which & 31)) & 1;
+
+  // hack for ibda lane counts
+  if(which == CSR_MHPMCOUNTER5 || which == CSR_HPMCOUNTER5){
+    return state.a_cnt;
+  }
+  if(which == CSR_MHPMCOUNTER6 || which == CSR_HPMCOUNTER6)
+    return state.b_cnt;
+  if(which == CSR_MHPMCOUNTER7 || which == CSR_HPMCOUNTER7)
+    return state.load_cnt;
+  if(which == CSR_MHPMCOUNTER8 || which == CSR_HPMCOUNTER8)
+    return state.store_cnt;
+  if(which == CSR_MHPMCOUNTER9 || which == CSR_HPMCOUNTER9)
+    return state.agi_cnt;
+  if(which == CSR_MHPMCOUNTER10 || which == CSR_HPMCOUNTER10)
+    return state.load_store_cnt;
 
   if (ctr_ok) {
     if (which >= CSR_HPMCOUNTER3 && which <= CSR_HPMCOUNTER31)

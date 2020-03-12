@@ -154,14 +154,21 @@ private:
 #define FLEN (p->get_flen())
 #define READ_REG(reg) STATE.XPR[reg]
 #define READ_FREG(reg) STATE.FPR[reg]
-#define RD READ_REG(insn.rd())
-#define RS1 READ_REG(insn.rs1())
-#define RS2 READ_REG(insn.rs2())
-#define RS3 READ_REG(insn.rs3())
+//#define RD READ_REG(insn.rd())
+#define RS1 ( \
+    (STATE.rs1 = insn.rs1()), \
+    READ_REG(insn.rs1()))
+#define RS2 ( \
+    (STATE.rs2 = insn.rs2()), \
+    READ_REG(insn.rs2()))
+//#define RS3 READ_REG(insn.rs3())
 #define WRITE_RD(value) WRITE_REG(insn.rd(), value)
 
 #ifndef RISCV_ENABLE_COMMITLOG
-# define WRITE_REG(reg, value) STATE.XPR.write(reg, value)
+# define WRITE_REG(reg, value) ({ \
+    STATE.XPR.write(reg, value); \
+    STATE.rd = reg; \
+})
 # define WRITE_FREG(reg, value) DO_WRITE_FREG(reg, freg(value))
 #else
 # define WRITE_REG(reg, value) ({ \
