@@ -11,6 +11,7 @@
 #include <map>
 #include <cassert>
 #include "debug_rom_defines.h"
+#include <unordered_set>
 
 class processor_t;
 class mmu_t;
@@ -206,6 +207,7 @@ class vectorUnit_t {
     }
 };
 
+#define IST_SIZE 12800
 // architectural state of a RISC-V hart
 struct state_t
 {
@@ -244,11 +246,14 @@ struct state_t
   size_t rd;
   size_t rs1;
   size_t rs2;
-  size_t rs_sp;
   bool store;
   bool load;
   bool amo;
   reg_t rdt[32];
+  bool rdt_marked[32];
+  std::unordered_set<reg_t> * ist;
+//  reg_t ist[IST_SIZE];
+//  uint32_t ist_end;
   reg_t a_cnt;
   reg_t b_cnt;
   reg_t load_cnt;
@@ -257,7 +262,7 @@ struct state_t
   reg_t load_store_cnt;
 
   void init_ibda();
-  void update_ibda(insn_t insn, processor_t* p);
+  void update_ibda(insn_t insn, processor_t* p, reg_t insn_pc);
   bool in_ist(reg_t addr);
   void ist_add(reg_t addr);
 
@@ -448,12 +453,12 @@ public:
   }
 
   void trigger_updated();
+  state_t state;
 
 private:
   simif_t* sim;
   mmu_t* mmu; // main memory is always accessed via the mmu
   extension_t* ext;
-  state_t state;
   uint32_t id;
   unsigned max_xlen;
   unsigned xlen;

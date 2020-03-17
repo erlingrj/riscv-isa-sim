@@ -194,60 +194,70 @@ void state_t::reset(reg_t max_isa)
 
   pmpcfg[0] = PMP_R | PMP_W | PMP_X | PMP_NAPOT;
   pmpaddr[0] = ~reg_t(0);
+
+  ist = new std::unordered_set<reg_t>;
 }
 
 void state_t::init_ibda(){
     rd = 0;
     rs1 = 0;
     rs2 = 0;
-    rs_sp = 0;
     store = false;
     load = false;
     amo = false;
   }
 
+//#define IST_INDEX(x) ((x>>2)^((x>>2)/(IST_SIZE/2))&(IST_SIZE/2-1))
+
   bool state_t::in_ist(reg_t addr){
-    return false;
+    return ist->find(addr) != ist->end();
   }
   void state_t::ist_add(reg_t addr){
-    return;
+    ist->insert(addr);
   };
 
-  void state_t::update_ibda(insn_t insn, processor_t* p){
-    bool agi = in_ist(pc);
-    bool ibda = (load || store || agi) && !amo;
-//    fprintf(stderr, "b: %d, a: %d\n", a_cnt, b_cnt);
-    if(rs1){
-        ist_add(rdt[rs1]);
-    }
-    if(rs2){
-        ist_add(rdt[rs2]);
-    }
-    if(rs_sp){
-        ist_add(rdt[rs_sp]);
+  void state_t::update_ibda(insn_t insn, processor_t* p, reg_t insn_pc){
+    bool agi = in_ist(insn_pc);
+    bool ibda = ((load || store ) && !amo) || agi;
+    uint64_t bits = insn.bits() & ((1ULL << (8 * insn_length(insn.bits()))) - 1);
+//    fprintf(stderr, "0x%016" PRIx64 " (0x%08" PRIx64 ") %s\n",
+//                        insn_pc, bits, p->disassembler->disassemble(insn).c_str());
+//    fprintf(stderr, "insn_pc: 0x%016" PRIx64 " rd: %d rs1: %d rs2: %d\n", insn_pc, rd, rs1, rs2);
+    if(ibda){
+        if(rs1 && !rdt_marked[rs1]){
+//            fprintf(stderr, "ibda added rs1 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs1, rdt[rs1], insn_pc);
+            ist_add(rdt[rs1]);
+            // avoid unnecessary rdt additions
+            rdt_marked[rs1] = true;
+        }
+        // don't add data dependency for stores
+        if(rs2 && (!store || amo) && !rdt_marked[rs2]){
+//            fprintf(stderr, "ibda added rs2 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs2, rdt[rs2], insn_pc);
+            ist_add(rdt[rs2]);
+            rdt_marked[rs2] = true;
+        }
     }
     // write rdt last
     if(rd){
-        rdt[rd] = pc;
+        rdt[rd] = insn_pc;
+        rdt_marked[rd] = ibda;
     }
-    if(load && !amo){
-        load_cnt++;
-        uint64_t bits = insn.bits() & ((1ULL << (8 * insn_length(insn.bits()))) - 1);
-        fprintf(stderr, "load: 0x%016" PRIx64 " (0x%08" PRIx64 ") %s\n",
-                    pc, bits, p->disassembler->disassemble(insn).c_str());
-    }
-    if(store && !amo){
-        store_cnt++;
-        uint64_t bits = insn.bits() & ((1ULL << (8 * insn_length(insn.bits()))) - 1);
-        fprintf(stderr, "store: 0x%016" PRIx64 " (0x%08" PRIx64 ") %s\n",
-                    pc, bits, p->disassembler->disassemble(insn).c_str());
-    }
-    if(agi){
-        agi_cnt++;
-    }
-    if(store && load && !amo){
-        load_store_cnt++;
-    }
+//    if(load && !amo){
+//        load_cnt++;
+////        fprintf(stderr, "load: 0x%016" PRIx64 " (0x%08" PRIx64 ") %s\n",
+////                    insn_pc, bits, p->disassembler->disassemble(insn).c_str());
+//    }
+//    if(store && !amo){
+//        store_cnt++;
+////        fprintf(stderr, "store: 0x%016" PRIx64 " (0x%08" PRIx64 ") %s\n",
+////                    insn_pc, bits, p->disassembler->disassemble(insn).c_str());
+//    }
+//    if(agi){
+//        agi_cnt++;
+//    }
+//    if(store && load && !amo){
+//        load_store_cnt++;
+//    }
     // update counter
     if(ibda){
         b_cnt++;
@@ -758,19 +768,21 @@ reg_t processor_t::get_csr(int which)
   bool ctr_ok = (ctr_en >> (which & 31)) & 1;
 
   // hack for ibda lane counts
+  //dlq
   if(which == CSR_MHPMCOUNTER5 || which == CSR_HPMCOUNTER5){
     return state.a_cnt;
   }
-  if(which == CSR_MHPMCOUNTER6 || which == CSR_HPMCOUNTER6)
-    return state.b_cnt;
+  // iq
   if(which == CSR_MHPMCOUNTER7 || which == CSR_HPMCOUNTER7)
-    return state.load_cnt;
-  if(which == CSR_MHPMCOUNTER8 || which == CSR_HPMCOUNTER8)
-    return state.store_cnt;
-  if(which == CSR_MHPMCOUNTER9 || which == CSR_HPMCOUNTER9)
-    return state.agi_cnt;
-  if(which == CSR_MHPMCOUNTER10 || which == CSR_HPMCOUNTER10)
-    return state.load_store_cnt;
+    return state.b_cnt;
+//  if(which == CSR_MHPMCOUNTER7 || which == CSR_HPMCOUNTER7)
+//    return state.load_cnt;
+//  if(which == CSR_MHPMCOUNTER8 || which == CSR_HPMCOUNTER8)
+//    return state.store_cnt;
+//  if(which == CSR_MHPMCOUNTER9 || which == CSR_HPMCOUNTER9)
+//    return state.agi_cnt;
+//  if(which == CSR_MHPMCOUNTER10 || which == CSR_HPMCOUNTER10)
+//    return state.load_store_cnt;
 
   if (ctr_ok) {
     if (which >= CSR_HPMCOUNTER3 && which <= CSR_HPMCOUNTER31)

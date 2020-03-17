@@ -84,8 +84,10 @@ inline void processor_t::update_histogram(reg_t pc)
 static reg_t execute_insn(processor_t* p, reg_t pc, insn_fetch_t fetch)
 {
   commit_log_stash_privilege(p);
+  p->state.init_ibda();
   reg_t npc = fetch.func(p, fetch.insn, pc);
   if (npc != PC_SERIALIZE_BEFORE) {
+    p->state.update_ibda(fetch.insn, p, pc);
     if (p->get_log_commits()) {
       commit_log_print_insn(p->get_state(), pc, fetch.insn);
     }
@@ -155,9 +157,7 @@ void processor_t::step(size_t n)
           insn_fetch_t fetch = mmu->load_insn(pc);
           if (debug && !state.serialized)
             disasm(fetch.insn);
-          state.init_ibda();
           pc = execute_insn(this, pc, fetch);
-          state.update_ibda(fetch.insn, this);
           advance_pc();
         }
       }
@@ -192,14 +192,12 @@ void processor_t::step(size_t n)
         // is located within the execute_insn() function call.
         #define ICACHE_ACCESS(i) { \
           insn_fetch_t fetch = ic_entry->data; \
-          state.init_ibda(); \
           pc = execute_insn(this, pc, fetch); \
           ic_entry = ic_entry->next; \
           if (i == mmu_t::ICACHE_ENTRIES-1) break; \
           if (unlikely(ic_entry->tag != pc)) break; \
           if (unlikely(instret+1 == n)) break; \
           instret++; \
-          state.update_ibda(fetch.insn, this); \
           state.pc = pc; \
         }
 
@@ -231,9 +229,7 @@ void processor_t::step(size_t n)
         // instructions are idempotent so restarting is safe.)
 
         insn_fetch_t fetch = mmu->load_insn(pc);
-        state.init_ibda();
         pc = execute_insn(this, pc, fetch);
-        state.update_ibda(fetch.insn, this);
         advance_pc();
 
         delete mmu->matched_trigger;
@@ -264,6 +260,10 @@ void processor_t::step(size_t n)
     }
 
     state.minstret += instret;
+    if((state.a_cnt+state.b_cnt)!=(state.minstret)){
+        fprintf(stderr, "a: %d, b: %d, a+b: %d, ret: %d\n", state.a_cnt, state.b_cnt, state.a_cnt+state.b_cnt, state.minstret);
+        assert(false);
+    }
     n -= instret;
   }
 }
