@@ -207,7 +207,9 @@ class vectorUnit_t {
     }
 };
 
-#define IST_SIZE 12800
+#define IST_SIZE 128
+//#define IST_LRU
+
 // architectural state of a RISC-V hart
 struct state_t
 {
@@ -251,9 +253,12 @@ struct state_t
   bool amo;
   reg_t rdt[32];
   bool rdt_marked[32];
+  #ifdef IST_LRU
+  reg_t ist_tags[IST_SIZE];
+  bool ist_lru[IST_SIZE/2];
+  #else
   std::unordered_set<reg_t> * ist;
-//  reg_t ist[IST_SIZE];
-//  uint32_t ist_end;
+  #endif
   reg_t a_cnt;
   reg_t b_cnt;
   reg_t load_cnt;

@@ -195,7 +195,9 @@ void state_t::reset(reg_t max_isa)
   pmpcfg[0] = PMP_R | PMP_W | PMP_X | PMP_NAPOT;
   pmpaddr[0] = ~reg_t(0);
 
+#ifndef IST_LRU
   ist = new std::unordered_set<reg_t>;
+#endif
 }
 
 void state_t::init_ibda(){
@@ -207,14 +209,37 @@ void state_t::init_ibda(){
     amo = false;
   }
 
-//#define IST_INDEX(x) ((x>>2)^((x>>2)/(IST_SIZE/2))&(IST_SIZE/2-1))
+#ifdef IST_LRU
 
+#define IST_INDEX(x) (((x^(x/(IST_SIZE/2)))>>1)&(IST_SIZE/2-1))
+  bool state_t::in_ist(reg_t addr){
+      if(ist_tags[IST_INDEX(addr)*2] == addr){
+          return true;
+      }
+      if(ist_tags[IST_INDEX(addr)*2+1] == addr){
+          return true;
+      }
+      return false;
+  }
+  void state_t::ist_add(reg_t addr){
+    int ist_index = IST_INDEX(addr);
+    if(ist_lru[ist_index]){
+        ist_lru[ist_index] = false;
+        ist_index = ist_index*2;
+    } else{
+        ist_lru[ist_index] = true;
+        ist_index = ist_index*2+1;
+    }
+    ist_tags[ist_index] = addr;
+  };
+#else
   bool state_t::in_ist(reg_t addr){
     return ist->find(addr) != ist->end();
   }
   void state_t::ist_add(reg_t addr){
     ist->insert(addr);
   };
+#endif
 
   void state_t::update_ibda(insn_t insn, processor_t* p, reg_t insn_pc){
     bool agi = in_ist(insn_pc);
@@ -230,8 +255,10 @@ void state_t::init_ibda(){
             // avoid unnecessary rdt additions
             rdt_marked[rs1] = true;
         }
+        if(rs2 &&
         // don't add data dependency for stores
-        if(rs2 && (!store || amo) && !rdt_marked[rs2]){
+        (!store || amo) &&
+        !rdt_marked[rs2]){
 //            fprintf(stderr, "ibda added rs2 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs2, rdt[rs2], insn_pc);
             ist_add(rdt[rs2]);
             rdt_marked[rs2] = true;
