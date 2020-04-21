@@ -11,7 +11,7 @@
 #include <map>
 #include <cassert>
 #include "debug_rom_defines.h"
-#include <unordered_set>
+#include <unordered_map>
 
 class processor_t;
 class mmu_t;
@@ -208,6 +208,8 @@ class vectorUnit_t {
 };
 
 #define IST_SIZE 128
+#define IST_WRITE_PORTS 1
+#define CORE_WIDTH 1
 //#define IST_LRU
 
 // architectural state of a RISC-V hart
@@ -245,19 +247,23 @@ struct state_t
   reg_t scause;
 
   //ibda stuff - state reset zeros everything
-  size_t rd;
-  size_t rs1;
-  size_t rs2;
-  bool store;
-  bool load;
-  bool amo;
+  size_t core_idx; //Count up instructions to trigger ibda when we have filled up the width
+  size_t rd[CORE_WIDTH];
+  size_t rs1[CORE_WIDTH];
+  size_t rs2[CORE_WIDTH];
+  bool store[CORE_WIDTH];
+  bool load[CORE_WIDTH];
+  bool amo[CORE_WIDTH];
+  bool agi[CORE_WIDTH];
+  bool ibda[CORE_WIDTH];
+  reg_t instruction_pc[CORE_WIDTH];
   reg_t rdt[32];
   bool rdt_marked[32];
   #ifdef IST_LRU
   reg_t ist_tags[IST_SIZE];
   bool ist_lru[IST_SIZE/2];
   #else
-  std::unordered_set<reg_t> * ist;
+  std::unordered_map<reg_t, reg_t> * ist;
   #endif
   reg_t a_cnt;
   reg_t b_cnt;
@@ -270,6 +276,7 @@ struct state_t
   void update_ibda(insn_t insn, processor_t* p, reg_t insn_pc);
   bool in_ist(reg_t addr);
   void ist_add(reg_t addr);
+  void advance_core_idx();
 
 
   reg_t dpc;

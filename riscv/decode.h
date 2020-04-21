@@ -156,10 +156,10 @@ private:
 #define READ_FREG(reg) STATE.FPR[reg]
 //#define RD READ_REG(insn.rd())
 #define RS1 ( \
-    (STATE.rs1 = insn.rs1()), \
+    (STATE.rs1[STATE.core_idx] = insn.rs1()), \
     READ_REG(insn.rs1()))
 #define RS2 ( \
-    (STATE.rs2 = insn.rs2()), \
+    (STATE.rs2[STATE.core_idx] = insn.rs2()), \
     READ_REG(insn.rs2()))
 //#define RS3 READ_REG(insn.rs3())
 #define WRITE_RD(value) WRITE_REG(insn.rd(), value)
@@ -167,7 +167,7 @@ private:
 #ifndef RISCV_ENABLE_COMMITLOG
 # define WRITE_REG(reg, value) ({ \
     STATE.XPR.write(reg, value); \
-    STATE.rd = reg; \
+    STATE.rd[STATE.core_idx] = reg; \
 })
 # define WRITE_FREG(reg, value) DO_WRITE_FREG(reg, freg(value))
 #else
@@ -188,22 +188,22 @@ private:
 #define WRITE_RVC_RS2S(value) WRITE_REG(insn.rvc_rs2s(), value)
 #define WRITE_RVC_FRS2S(value) WRITE_FREG(insn.rvc_rs2s(), value)
 #define RVC_RS1 ( \
-    (STATE.rs1 = insn.rvc_rs1()), \
+    (STATE.rs1[STATE.core_idx] = insn.rvc_rs1()), \
     READ_REG(insn.rvc_rs1()))
 #define RVC_RS2 ( \
-    (STATE.rs2 = insn.rvc_rs2()), \
+    (STATE.rs2[STATE.core_idx] = insn.rvc_rs2()), \
     READ_REG(insn.rvc_rs2()))
 #define RVC_RS1S ( \
-    (STATE.rs1 = insn.rvc_rs1s()), \
+    (STATE.rs1[STATE.core_idx] = insn.rvc_rs1s()), \
     READ_REG(insn.rvc_rs1s()))
 #define RVC_RS2S ( \
-    (STATE.rs2 = insn.rvc_rs2s()), \
+    (STATE.rs2[STATE.core_idx] = insn.rvc_rs2s()), \
     READ_REG(insn.rvc_rs2s()))
 #define RVC_FRS2 READ_FREG(insn.rvc_rs2())
 #define RVC_FRS2S READ_FREG(insn.rvc_rs2s())
 // sp is used instead of rs1
 #define RVC_SP ( \
-    (STATE.rs1 = X_SP), \
+    (STATE.rs1[STATE.core_idx] = X_SP), \
     READ_REG(X_SP))
 
 // FPU macros

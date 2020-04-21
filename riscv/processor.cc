@@ -196,17 +196,21 @@ void state_t::reset(reg_t max_isa)
   pmpaddr[0] = ~reg_t(0);
 
 #ifndef IST_LRU
-  ist = new std::unordered_set<reg_t>;
+  ist = new std::unordered_map<reg_t, reg_t>; // Use map to also store number of lookups
 #endif
+  core_idx = 0;
 }
 
 void state_t::init_ibda(){
-    rd = 0;
-    rs1 = 0;
-    rs2 = 0;
-    store = false;
-    load = false;
-    amo = false;
+    rd[core_idx] = 0;
+    rs1[core_idx] = 0;
+    rs2[core_idx] = 0;
+    agi[core_idx] = 0;
+    ibda[core_idx] = 0;
+    instruction_pc[core_idx] = 0;
+    store[core_idx] = false;
+    load[core_idx] = false;
+    amo[core_idx] = false;
   }
 
 #ifdef IST_LRU
@@ -234,41 +238,79 @@ void state_t::init_ibda(){
   };
 #else
   bool state_t::in_ist(reg_t addr){
-    return ist->find(addr) != ist->end();
-  }
+    std::unordered_map<reg_t, reg_t>::iterator in_ist = ist->find(addr);
+    if (in_ist != ist->end()) {
+      //fprintf(stderr, "Lookup: %lu found\n", addr);
+      ++in_ist->second;
+      return true;
+    } else {
+      return false;
+    }
+  };
+
   void state_t::ist_add(reg_t addr){
-    ist->insert(addr);
+    //fprintf(stderr, "somthing added to ist. size=%u\n", ist->size());
+    ist->insert({addr, 0});
   };
 #endif
 
   void state_t::update_ibda(insn_t insn, processor_t* p, reg_t insn_pc){
-    bool agi = in_ist(insn_pc);
-    bool ibda = ((load || store ) && !amo) || agi;
+    agi[core_idx] = in_ist(insn_pc);
+    ibda[core_idx] = ((load[core_idx] || store[core_idx] ) && !amo[core_idx]) || agi[core_idx];
+    instruction_pc[core_idx] = insn_pc;
     uint64_t bits = insn.bits() & ((1ULL << (8 * insn_length(insn.bits()))) - 1);
-//    fprintf(stderr, "0x%016" PRIx64 " (0x%08" PRIx64 ") %s\n",
-//                        insn_pc, bits, p->disassembler->disassemble(insn).c_str());
-//    fprintf(stderr, "insn_pc: 0x%016" PRIx64 " rd: %d rs1: %d rs2: %d\n", insn_pc, rd, rs1, rs2);
-    if(ibda){
-        if(rs1 && !rdt_marked[rs1]){
-//            fprintf(stderr, "ibda added rs1 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs1, rdt[rs1], insn_pc);
-            ist_add(rdt[rs1]);
+   //fprintf(stderr, "0x%016" PRIx64 " (0x%08" PRIx64 ") core_idx:%d ibda:%d %s\n",
+   //                    insn_pc, bits, core_idx, ibda[core_idx],p->disassembler->disassemble(insn).c_str());
+   //fprintf(stderr, "insn_pc: 0x%016" PRIx64 " rd: %d rs1: %d rs2: %d\n", insn_pc, rd, rs1, rs2);
+    
+    if(core_idx == (CORE_WIDTH - 1)) {
+      // Core width is "full" we can now do IBDA and emulate n-wide cores
+      size_t mark_cnt = 0;
+      size_t i = 0;
+      while (i < CORE_WIDTH && mark_cnt < IST_WRITE_PORTS) {
+        if(ibda[i]){
+          if(rs1[i] && !rdt_marked[rs1[i]]){
+           //fprintf(stderr, "ibda added rs1 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs1[i], rdt[rs1[i]], instruction_pc[i]);
+            ist_add(rdt[rs1[i]]);
             // avoid unnecessary rdt additions
-            rdt_marked[rs1] = true;
+            rdt_marked[rs1[i]] = true;
+            mark_cnt++;
+          }  
+          
+          if (!(mark_cnt < IST_WRITE_PORTS)) break;
+
+          if(rs2[i] &&
+            // don't add data dependency for stores
+            (!store[i] || amo[i]) &&
+            !rdt_marked[rs2[i]])
+          {
+         //  fprintf(stderr, "ibda added rs2 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs2[i], rdt[rs2[i]], instruction_pc[i]);
+            ist_add(rdt[rs2[i]]);
+            rdt_marked[rs2[i]] = true;
+            mark_cnt++;
+          }
+        } //endif(ibda(i))
+        ++i;
+      }
+      for (int i = 0; i<CORE_WIDTH; i++) {
+        if(rd[i]){
+          rdt[rd[i]] = instruction_pc[i];
+          rdt_marked[rd[i]] = ibda[i];
         }
-        if(rs2 &&
-        // don't add data dependency for stores
-        (!store || amo) &&
-        !rdt_marked[rs2]){
-//            fprintf(stderr, "ibda added rs2 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs2, rdt[rs2], insn_pc);
-            ist_add(rdt[rs2]);
-            rdt_marked[rs2] = true;
+
+        // update counter
+        if(ibda[i]) {
+            b_cnt++;
+        } else {
+            a_cnt++;
         }
+      }
+      
+
+    
     }
     // write rdt last
-    if(rd){
-        rdt[rd] = insn_pc;
-        rdt_marked[rd] = ibda;
-    }
+ 
 //    if(load && !amo){
 //        load_cnt++;
 ////        fprintf(stderr, "load: 0x%016" PRIx64 " (0x%08" PRIx64 ") %s\n",
@@ -285,13 +327,15 @@ void state_t::init_ibda(){
 //    if(store && load && !amo){
 //        load_store_cnt++;
 //    }
-    // update counter
-    if(ibda){
-        b_cnt++;
-    } else {
-        a_cnt++;
-    }
+    
   }
+
+// For IBDA. Increases the core_width_count counter and wraps around
+void state_t::advance_core_idx() {
+  if (++core_idx == CORE_WIDTH) {
+    core_idx = 0;
+  }
+}
 
 void vectorUnit_t::reset(){
   free(reg_file);
@@ -800,12 +844,28 @@ reg_t processor_t::get_csr(int which)
     return state.a_cnt;
   }
   // iq
-  if(which == CSR_MHPMCOUNTER7 || which == CSR_HPMCOUNTER7)
+  if(which == CSR_MHPMCOUNTER6 || which == CSR_HPMCOUNTER6) {
     return state.b_cnt;
-//  if(which == CSR_MHPMCOUNTER7 || which == CSR_HPMCOUNTER7)
-//    return state.load_cnt;
-//  if(which == CSR_MHPMCOUNTER8 || which == CSR_HPMCOUNTER8)
-//    return state.store_cnt;
+  }
+  if(which == CSR_MHPMCOUNTER7 || which == CSR_HPMCOUNTER7) {
+    // Print out IST size
+    #ifndef IST_LRU
+      fprintf(stderr, "Ist-size=%lu\n", state.ist->size());
+    #endif  
+    return 0;
+  }
+  if(which == CSR_MHPMCOUNTER8 || which == CSR_HPMCOUNTER8) {
+    // Print out the number of lookups on each
+    #ifndef IST_LRU
+    unsigned long i = 0;
+    for (auto it = state.ist->cbegin(); it != state.ist->end(); ++it) {
+      fprintf(stderr, "Ist_%lu-lookups=%lu\n", i, it->second);
+      ++i;
+    }
+    #endif 
+    
+    return 0;
+  }
 //  if(which == CSR_MHPMCOUNTER9 || which == CSR_HPMCOUNTER9)
 //    return state.agi_cnt;
 //  if(which == CSR_MHPMCOUNTER10 || which == CSR_HPMCOUNTER10)

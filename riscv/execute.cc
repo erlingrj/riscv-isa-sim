@@ -88,6 +88,7 @@ static reg_t execute_insn(processor_t* p, reg_t pc, insn_fetch_t fetch)
   reg_t npc = fetch.func(p, fetch.insn, pc);
   if (npc != PC_SERIALIZE_BEFORE) {
     p->state.update_ibda(fetch.insn, p, pc);
+    p->state.advance_core_idx();
     if (p->get_log_commits()) {
       commit_log_print_insn(p->get_state(), pc, fetch.insn);
     }
@@ -260,10 +261,13 @@ void processor_t::step(size_t n)
     }
 
     state.minstret += instret;
-    if((state.a_cnt+state.b_cnt)!=(state.minstret)){
+    if(state.core_idx == 0) {
+      if((state.a_cnt+state.b_cnt)!=(state.minstret)){
         fprintf(stderr, "a: %d, b: %d, a+b: %d, ret: %d\n", state.a_cnt, state.b_cnt, state.a_cnt+state.b_cnt, state.minstret);
         assert(false);
+      }
     }
+    
     n -= instret;
   }
 }

@@ -82,7 +82,7 @@ public:
   #define load_func(type) \
     inline type##_t load_##type(reg_t addr) { \
       if(proc) \
-        proc->state.load = true; \
+        proc->state.load[proc->state.core_idx] = true; \
       if (unlikely(addr & (sizeof(type##_t)-1))) \
         return misaligned_load(addr, sizeof(type##_t)); \
       reg_t vpn = addr >> PGSHIFT; \
@@ -128,7 +128,7 @@ public:
   #define store_func(type) \
     void store_##type(reg_t addr, type##_t val) { \
       if(proc) \
-        proc->state.store = true; \
+        proc->state.store[proc->state.core_idx] = true; \
       if (unlikely(addr & (sizeof(type##_t)-1))) \
         return misaligned_store(addr, val, sizeof(type##_t)); \
       reg_t vpn = addr >> PGSHIFT; \
@@ -155,7 +155,7 @@ public:
     template<typename op> \
     type##_t amo_##type(reg_t addr, op f) { \
       if(proc) \
-        proc->state.amo = true; \
+        proc->state.amo[proc->state.core_idx] = true; \
       if (addr & (sizeof(type##_t)-1)) \
         throw trap_store_address_misaligned(addr); \
       try { \
