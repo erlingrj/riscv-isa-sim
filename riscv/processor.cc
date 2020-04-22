@@ -333,6 +333,7 @@ void state_t::init_ibda(){
     #ifdef BYPASSABLE_RDT
     // Update RDT
     if (rd[core_idx]) {
+      fprintf(stderr, "rd[core_idx] = %lu\n");
       rdt[rdt[core_idx]] = instruction_pc[core_idx];
       #ifdef RDT_MARKED_BIT
         rdt_marked[rd[core_idx]] = ibda[core_idx];
