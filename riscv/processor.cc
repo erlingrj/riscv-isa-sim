@@ -317,7 +317,7 @@ void state_t::init_ibda(){
         } //endif(ibda(i))
         ++i;
       }
-
+      #ifndef BYPASSABLE_RDT
       for (int i = 0; i<CORE_WIDTH; i++) {
         if(rd[i]){
           rdt[rd[i]] = instruction_pc[i];
@@ -326,8 +326,19 @@ void state_t::init_ibda(){
           #endif
         }
       }
+      #endif
   
     }
+
+    #ifdef BYPASSABLE_RDT
+    // Update RDT
+    if (rd[core_idx]) {
+      rdt[rdt[core_idx]] = instruction_pc[i];
+      #ifdef RDT_MARKED_BIT
+        rdt_marked[rd[i]] = ibda[i];
+      #endif
+    }
+    #endif
 
       // update counter
     if(ibda[core_idx]) {
