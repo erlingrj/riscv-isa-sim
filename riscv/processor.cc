@@ -245,12 +245,12 @@ void state_t::init_ibda(){
     bool agi = in_ist(insn_pc);
     bool ibda = ((load || store ) && !amo) || agi;
     uint64_t bits = insn.bits() & ((1ULL << (8 * insn_length(insn.bits()))) - 1);
-//    fprintf(stderr, "0x%016" PRIx64 " (0x%08" PRIx64 ") %s\n",
-//                        insn_pc, bits, p->disassembler->disassemble(insn).c_str());
-//    fprintf(stderr, "insn_pc: 0x%016" PRIx64 " rd: %d rs1: %d rs2: %d\n", insn_pc, rd, rs1, rs2);
+    fprintf(stderr, "0x%016" PRIx64 " (0x%08" PRIx64 ") %s\n",
+                        insn_pc, bits, p->disassembler->disassemble(insn).c_str());
+    fprintf(stderr, "insn_pc: 0x%016" PRIx64 " rd: %d rs1: %d rs2: %d\n", insn_pc, rd, rs1, rs2);
     if(ibda){
         if(rs1 && !rdt_marked[rs1]){
-//            fprintf(stderr, "ibda added rs1 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs1, rdt[rs1], insn_pc);
+            fprintf(stderr, "ibda added rs1 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs1, rdt[rs1], insn_pc);
             ist_add(rdt[rs1]);
             // avoid unnecessary rdt additions
             rdt_marked[rs1] = true;
@@ -259,7 +259,7 @@ void state_t::init_ibda(){
         // don't add data dependency for stores
         (!store || amo) &&
         !rdt_marked[rs2]){
-//            fprintf(stderr, "ibda added rs2 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs2, rdt[rs2], insn_pc);
+            fprintf(stderr, "ibda added rs2 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs2, rdt[rs2], insn_pc);
             ist_add(rdt[rs2]);
             rdt_marked[rs2] = true;
         }
