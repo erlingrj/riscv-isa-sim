@@ -208,7 +208,7 @@ class vectorUnit_t {
 };
 
 #define IST_SIZE 128
-//#define IST_LRU
+#define IST_LRU
 
 // architectural state of a RISC-V hart
 struct state_t
