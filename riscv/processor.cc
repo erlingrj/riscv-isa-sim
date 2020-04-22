@@ -283,41 +283,82 @@ void state_t::init_ibda(){
       size_t i = 0;
       while (i < CORE_WIDTH && mark_cnt < IST_WRITE_PORTS) {
         if(ibda[i]){
-          #ifdef RDT_MARKED_BIT
-            if(rs1[i] && !rdt_marked[rs1[i]])
-          #else
-            if(rs1[i])
-          #endif
-          {
+
+          if(rs1[i]) {
+            #ifdef RDT_MARKED_BIT
+            bool is_marked = rdt_marked[rs1[i]];
+            #endif
+            reg_t pc = rdt[rs1[i]];
+            // If we have a bypassable queue. We have to check previous
+            // candidates
+            #ifdef RDT_BYPASSABLE
+              for(size_t j = 0; j<i; ++j) {
+                if (rdt_bypass[j] == rs1[i]) {
+                  pc = instruction_pc[j];
+                  #ifdef RDT_MARKED_BIT
+                  is_marked = rdt_marked_bypass[j];
+                  #endif
+                }
+              }
+            #endif
+
+            #ifdef RDT_MARKED_BIT
+            if(!is_marked) {
+              rdt_marked[rs1[i]] = true;
+            #endif
+
             fprintf(stderr, "ibda added rs1 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs1[i], rdt[rs1[i]], instruction_pc[i]);
-            ist_add(rdt[rs1[i]]);
+            ist_add(pc);
             // avoid unnecessary rdt additions
             mark_cnt++;
 
             #ifdef RDT_MARKED_BIT
-              rdt_marked[rs1[i]] = true;
+            }
             #endif
-          }  
+          
+          }
+
           
           if (!(mark_cnt < IST_WRITE_PORTS)) break;
 
-           #ifdef RDT_MARKED_BIT
-            if(rs2[i] && !rdt_marked[rs2[i]] && (!store[i] || amo[i]))
-          #else
-            if(rs1[i] && (!store[i] || amo[i]))
-          #endif
-          {
-            fprintf(stderr, "ibda added rs2 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs2[i], rdt[rs2[i]], instruction_pc[i]);
-            ist_add(rdt[rs2[i]]);
-            mark_cnt++;
+
+          if(rs2[i] && (!store[i] || amo[i]))  {
             #ifdef RDT_MARKED_BIT
+            bool is_marked = rdt_marked[rs2[i]];
+            #endif
+            reg_t pc = rdt[rs2[i]];
+            // If we have a bypassable queue. We have to check previous
+            // candidates
+            #ifdef RDT_BYPASSABLE
+              for(size_t j = 0; j<i; ++j) {
+                if (rdt_bypass[j] == rs2[i]) {
+                  pc = instruction_pc[j];
+                  #ifdef RDT_MARKED_BIT
+                  is_marked = rdt_marked_bypass[j];
+                  #endif
+                }
+              }
+            #endif
+
+            #ifdef RDT_MARKED_BIT
+            if(!is_marked) {
               rdt_marked[rs2[i]] = true;
             #endif
+
+            fprintf(stderr, "ibda added rs1 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs1[i], rdt[rs1[i]], instruction_pc[i]);
+            ist_add(pc);
+            // avoid unnecessary rdt additions
+            mark_cnt++;
+
+            #ifdef RDT_MARKED_BIT
+            }
+            #endif
+          
           }
         } //endif(ibda(i))
+
         ++i;
       }
-      #ifndef BYPASSABLE_RDT
       for (int i = 0; i<CORE_WIDTH; i++) {
         if(rd[i]){
           rdt[rd[i]] = instruction_pc[i];
@@ -326,16 +367,15 @@ void state_t::init_ibda(){
           #endif
         }
       }
-      #endif
   
     }
 
-    #ifdef BYPASSABLE_RDT
+    #ifdef RDT_BYPASSABLE
     // Update RDT
     if (rd[core_idx]) {
-      rdt[rd[core_idx]] = instruction_pc[core_idx];
+      rdt_bypass[core_idx] = rd[core_idx];
       #ifdef RDT_MARKED_BIT
-        rdt_marked[rd[core_idx]] = ibda[core_idx];
+        rdt_marked_bypass[core_idx] = ibda[core_idx];
       #endif
     }
     #endif

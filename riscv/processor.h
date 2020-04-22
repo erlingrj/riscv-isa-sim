@@ -212,7 +212,7 @@ class vectorUnit_t {
 #define IST_WRITE_PORTS 4
 #define CORE_WIDTH 2
 #define RDT_MARKED_BIT
-#define BYPASSABLE_RDT
+#define RDT_BYPASSABLE
 
 //#define IST_LRU
 #define IST_WAYS 2
@@ -268,6 +268,11 @@ struct state_t
   reg_t rdt[32];
   #ifdef RDT_MARKED_BIT
   bool rdt_marked[32];
+  #endif
+
+  #ifdef RDT_BYPASSABLE
+  reg_t rdt_bypass[CORE_WIDTH];
+  reg_t rdt_marked_bypass[CORE_WIDTH];
   #endif
   
   #ifdef IST_LRU
