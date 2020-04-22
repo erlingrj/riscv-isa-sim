@@ -333,9 +333,9 @@ void state_t::init_ibda(){
     #ifdef BYPASSABLE_RDT
     // Update RDT
     if (rd[core_idx]) {
-      rdt[rdt[core_idx]] = instruction_pc[i];
+      rdt[rdt[core_idx]] = instruction_pc[core_idx];
       #ifdef RDT_MARKED_BIT
-        rdt_marked[rd[i]] = ibda[i];
+        rdt_marked[rd[core_idx]] = ibda[core_idx];
       #endif
     }
     #endif
