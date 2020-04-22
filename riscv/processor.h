@@ -212,6 +212,7 @@ class vectorUnit_t {
 #define IST_WRITE_PORTS 4
 #define CORE_WIDTH 2
 #define RDT_MARKED_BIT
+#define BYPASSABLE_RDT
 
 //#define IST_LRU
 #define IST_WAYS 2
