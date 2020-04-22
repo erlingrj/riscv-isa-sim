@@ -325,17 +325,15 @@ void state_t::init_ibda(){
             rdt_marked[rd[i]] = ibda[i];
           #endif
         }
-
-        // update counter
-        if(ibda[i]) {
-            b_cnt++;
-        } else {
-            a_cnt++;
-        }
       }
-      
+  
+    }
 
-    
+      // update counter
+    if(ibda[core_idx]) {
+        b_cnt++;
+    } else {
+        a_cnt++;
     }
     // write rdt last
  
