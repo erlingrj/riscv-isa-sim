@@ -214,9 +214,11 @@ void state_t::init_ibda(){
 #define IST_INDEX(x) (((x^(x/(IST_SIZE/2)))>>1)&(IST_SIZE/2-1))
   bool state_t::in_ist(reg_t addr){
       if(ist_tags[IST_INDEX(addr)*2] == addr){
+          ist_lru[IST_INDEX(addr)] = false;
           return true;
       }
       if(ist_tags[IST_INDEX(addr)*2+1] == addr){
+          ist_lru[IST_INDEX(addr)] = true;
           return true;
       }
       return false;
