@@ -231,7 +231,7 @@ void state_t::init_ibda(){
         ist_index = ist_index*2+1;
     }
     if (ist_tags[ist_index]) {
-      fprintf(stderr, "ist adding " "0x%016" PRIx64 "evicting " "0x%016\n" PRIx64, addr, ist_tags[ist_index]);
+      fprintf(stderr, "ist adding " "0x%016 " PRIx64 "evicting " "0x%016" PRIx64 "\n", addr, ist_tags[ist_index]);
     }
     ist_tags[ist_index] = addr;
   };
