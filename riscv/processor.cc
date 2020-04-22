@@ -347,6 +347,9 @@ void state_t::init_ibda(){
     } else {
         a_cnt++;
     }
+
+    fprintf(stderr, "Finish update_ibda\n");
+
     // write rdt last
  
 //    if(load && !amo){
