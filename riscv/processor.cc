@@ -245,7 +245,7 @@ void state_t::init_ibda(){
     } else if (ist_tag[ist_index]->size() >= IST_WAYS) {
       // Delete LRU
       reg_t evict = ist_tag[ist_index]->back();
-      fprintf(stderr, "ist adding " "0x%016" PRIx64 "evicting " "0x%016\n" PRIx64, addr, evict);
+      fprintf(stderr, "ist adding " "0x%016" PRIx64 "evicting " "0x%016" PRIx64 "\n", addr, evict);
       ist_tag[ist_index]->pop_back();
       ist_evictions[ist_index]++;
       
