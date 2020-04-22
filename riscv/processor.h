@@ -209,11 +209,11 @@ class vectorUnit_t {
 };
 
 #define IST_SIZE 128
-#define IST_WRITE_PORTS 2
-#define CORE_WIDTH 1
+#define IST_WRITE_PORTS 4
+#define CORE_WIDTH 2
 #define RDT_MARKED_BIT
 
-#define IST_LRU
+//#define IST_LRU
 #define IST_WAYS 2
 #define IST_SETS IST_SIZE/IST_WAYS
 
