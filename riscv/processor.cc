@@ -195,7 +195,12 @@ void state_t::reset(reg_t max_isa)
   pmpcfg[0] = PMP_R | PMP_W | PMP_X | PMP_NAPOT;
   pmpaddr[0] = ~reg_t(0);
 
-#ifndef IST_LRU
+#ifdef IST_LRU
+  for (int i = 0; i <IST_SETS; ++i) {
+    ist_tag[i] = new std::list<reg_t>; 
+    ist_evictions[i] = 0;
+  }
+#else
   ist = new std::unordered_map<reg_t, reg_t>; // Use map to also store number of lookups
 #endif
   core_idx = 0;
@@ -215,26 +220,35 @@ void state_t::init_ibda(){
 
 #ifdef IST_LRU
 
-#define IST_INDEX(x) (((x^(x/(IST_SIZE/2)))>>1)&(IST_SIZE/2-1))
+#define IST_INDEX(x) (((x^(x/(IST_SETS)))>>1)&(IST_SETS-1))
   bool state_t::in_ist(reg_t addr){
-      if(ist_tags[IST_INDEX(addr)*2] == addr){
-          return true;
-      }
-      if(ist_tags[IST_INDEX(addr)*2+1] == addr){
-          return true;
-      }
+    int ist_index = IST_INDEX(addr);
+    std::list<reg_t>::iterator it = std::find (ist_tag[ist_index]->begin(), ist_tag[ist_index]->end(), addr); 
+    if (it != ist_tag[ist_index]->end()) {
+      // Found it
+      ist_tag[ist_index]->erase(it);
+      ist_tag[ist_index]->push_front(addr);
+      return true;
+    } else {
       return false;
+    }
   }
+
   void state_t::ist_add(reg_t addr){
     int ist_index = IST_INDEX(addr);
-    if(ist_lru[ist_index]){
-        ist_lru[ist_index] = false;
-        ist_index = ist_index*2;
-    } else{
-        ist_lru[ist_index] = true;
-        ist_index = ist_index*2+1;
+    std::list<reg_t>::iterator it = std::find (ist_tag[ist_index]->begin(), ist_tag[ist_index]->end(), addr);
+    if (it != ist_tag[ist_index]->end()) {
+      // Found it
+      ist_tag[ist_index]->erase(it);
+    } else if (ist_tag[ist_index]->size() >= IST_WAYS) {
+      // Delete LRU
+      ist_tag[ist_index]->pop_back();
+      ist_evictions[ist_index]++;
     }
-    ist_tags[ist_index] = addr;
+
+    // Add new entry to head of LRU queue
+    ist_tag[ist_index]->push_front(addr);
+    assert(ist_tag[ist_index]->size() <= IST_WAYS);
   };
 #else
   bool state_t::in_ist(reg_t addr){
@@ -269,33 +283,47 @@ void state_t::init_ibda(){
       size_t i = 0;
       while (i < CORE_WIDTH && mark_cnt < IST_WRITE_PORTS) {
         if(ibda[i]){
-          if(rs1[i] && !rdt_marked[rs1[i]]){
+          #ifdef RDT_MARKED_BIT
+            if(rs1[i] && !rdt_marked[rs1[i]])
+          #else
+            if(rs1[i])
+          #endif
+          {
            //fprintf(stderr, "ibda added rs1 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs1[i], rdt[rs1[i]], instruction_pc[i]);
             ist_add(rdt[rs1[i]]);
             // avoid unnecessary rdt additions
-            rdt_marked[rs1[i]] = true;
             mark_cnt++;
+
+            #ifdef RDT_MARKED_BIT
+              rdt_marked[rs1[i]] = true;
+            #endif
           }  
           
           if (!(mark_cnt < IST_WRITE_PORTS)) break;
 
-          if(rs2[i] &&
-            // don't add data dependency for stores
-            (!store[i] || amo[i]) &&
-            !rdt_marked[rs2[i]])
+           #ifdef RDT_MARKED_BIT
+            if(rs2[i] && !rdt_marked[rs2[i]] && (!store[i] || amo[i]))
+          #else
+            if(rs1[i] && (!store[i] || amo[i]))
+          #endif
           {
-         //  fprintf(stderr, "ibda added rs2 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs2[i], rdt[rs2[i]], instruction_pc[i]);
+            //fprintf(stderr, "ibda added rs2 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs2[i], rdt[rs2[i]], instruction_pc[i]);
             ist_add(rdt[rs2[i]]);
-            rdt_marked[rs2[i]] = true;
             mark_cnt++;
+            #ifdef RDT_MARKED_BIT
+              rdt_marked[rs2[i]] = true;
+            #endif
           }
         } //endif(ibda(i))
         ++i;
       }
+
       for (int i = 0; i<CORE_WIDTH; i++) {
         if(rd[i]){
           rdt[rd[i]] = instruction_pc[i];
-          rdt_marked[rd[i]] = ibda[i];
+          #ifdef RDT_MARKED_BIT
+            rdt_marked[rd[i]] = ibda[i];
+          #endif
         }
 
         // update counter
@@ -850,7 +878,7 @@ reg_t processor_t::get_csr(int which)
   if(which == CSR_MHPMCOUNTER7 || which == CSR_HPMCOUNTER7) {
     // Print out IST size
     #ifndef IST_LRU
-      fprintf(stderr, "Ist-size=%lu\n", state.ist->size());
+      fprintf(stderr, "%lu IST_size\n", state.ist->size());
     #endif  
     return 0;
   }
@@ -859,15 +887,24 @@ reg_t processor_t::get_csr(int which)
     #ifndef IST_LRU
     unsigned long i = 0;
     for (auto it = state.ist->cbegin(); it != state.ist->end(); ++it) {
-      fprintf(stderr, "Ist_%lu-lookups=%lu\n", i, it->second);
+      fprintf(stderr, "%lu IST_lookups-%lu\n", it->second, i);
       ++i;
     }
     #endif 
     
     return 0;
   }
-//  if(which == CSR_MHPMCOUNTER9 || which == CSR_HPMCOUNTER9)
-//    return state.agi_cnt;
+  if(which == CSR_MHPMCOUNTER9 || which == CSR_HPMCOUNTER9) {
+    // Print the number of evictions per set
+    #ifdef IST_LRU
+    for (int i = 0; i<IST_SETS; ++i) {
+      fprintf(stderr, "%lu IST_evictions-%d\n", state.ist_evictions[i], i);
+    }
+    #endif
+
+    return 0;
+  }
+    
 //  if(which == CSR_MHPMCOUNTER10 || which == CSR_HPMCOUNTER10)
 //    return state.load_store_cnt;
 

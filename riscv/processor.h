@@ -12,6 +12,7 @@
 #include <cassert>
 #include "debug_rom_defines.h"
 #include <unordered_map>
+#include <list>
 
 class processor_t;
 class mmu_t;
@@ -208,9 +209,15 @@ class vectorUnit_t {
 };
 
 #define IST_SIZE 128
-#define IST_WRITE_PORTS 1
+#define IST_WRITE_PORTS 2
 #define CORE_WIDTH 1
-//#define IST_LRU
+#define RDT_MARKED_BIT
+
+#define IST_LRU
+#define IST_WAYS 2
+#define IST_SETS IST_SIZE/IST_WAYS
+
+
 
 // architectural state of a RISC-V hart
 struct state_t
@@ -258,10 +265,13 @@ struct state_t
   bool ibda[CORE_WIDTH];
   reg_t instruction_pc[CORE_WIDTH];
   reg_t rdt[32];
+  #ifdef RDT_MARKED_BIT
   bool rdt_marked[32];
+  #endif
+  
   #ifdef IST_LRU
-  reg_t ist_tags[IST_SIZE];
-  bool ist_lru[IST_SIZE/2];
+  std::list<reg_t> * ist_tag[IST_SETS];
+  reg_t ist_evictions[IST_SETS];
   #else
   std::unordered_map<reg_t, reg_t> * ist;
   #endif
