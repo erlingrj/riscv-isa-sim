@@ -244,8 +244,11 @@ void state_t::init_ibda(){
       ist_tag[ist_index]->erase(it);
     } else if (ist_tag[ist_index]->size() >= IST_WAYS) {
       // Delete LRU
+      std::<list>::iterator evict = ist_tag[ist_index]->back();
+      fprintf(stderr, "ist adding " "0x%016" PRIx64 "evicting " "0x%016" PRIx64, addr, *evict);
       ist_tag[ist_index]->pop_back();
       ist_evictions[ist_index]++;
+      
     }
 
     // Add new entry to head of LRU queue
@@ -309,7 +312,7 @@ void state_t::init_ibda(){
               rdt_marked[rs1[i]] = true;
             #endif
 
-            fprintf(stderr, "ibda added rs1 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs1[i], rdt[rs1[i]], instruction_pc[i]);
+            fprintf(stderr, "ibda added rs1 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs1[i], pc, instruction_pc[i]);
             ist_add(pc);
             // avoid unnecessary rdt additions
             mark_cnt++;
@@ -347,7 +350,7 @@ void state_t::init_ibda(){
               rdt_marked[rs2[i]] = true;
             #endif
 
-            fprintf(stderr, "ibda added rs1 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs1[i], rdt[rs1[i]], instruction_pc[i]);
+            fprintf(stderr, "ibda added rs1 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs2[i], pc, instruction_pc[i]);
             ist_add(pc);
             // avoid unnecessary rdt additions
             mark_cnt++;
