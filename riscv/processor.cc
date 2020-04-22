@@ -275,7 +275,7 @@ void state_t::init_ibda(){
     uint64_t bits = insn.bits() & ((1ULL << (8 * insn_length(insn.bits()))) - 1);
    fprintf(stderr, "0x%016" PRIx64 " (0x%08" PRIx64 ") core_idx:%d ibda:%d %s\n",
                        insn_pc, bits, core_idx, ibda[core_idx],p->disassembler->disassemble(insn).c_str());
-   fprintf(stderr, "insn_pc: 0x%016" PRIx64 " rd: %d rs1: %d rs2: %d\n", insn_pc, rd, rs1, rs2);
+   //fprintf(stderr, "insn_pc: 0x%016" PRIx64 " rd: %d rs1: %d rs2: %d\n", insn_pc, rd, rs1, rs2);
     
     if(core_idx == (CORE_WIDTH - 1)) {
       // Core width is "full" we can now do IBDA and emulate n-wide cores
