@@ -800,8 +800,9 @@ reg_t processor_t::get_csr(int which)
     return state.a_cnt;
   }
   // iq
-  if(which == CSR_MHPMCOUNTER7 || which == CSR_HPMCOUNTER7)
+  if(which == CSR_MHPMCOUNTER6 || which == CSR_HPMCOUNTER6) {
     return state.b_cnt;
+  }
 //  if(which == CSR_MHPMCOUNTER7 || which == CSR_HPMCOUNTER7)
 //    return state.load_cnt;
 //  if(which == CSR_MHPMCOUNTER8 || which == CSR_HPMCOUNTER8)
