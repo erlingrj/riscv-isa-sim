@@ -216,8 +216,10 @@ void state_t::init_ibda(){
     store[core_idx] = false;
     load[core_idx] = false;
     amo[core_idx] = false;
-    rdt_bypass[core_idx] = 0;
-    rdt_marked_bypass[core_idx] = false;
+    #ifdef RDT_BYPASSABLE
+      rdt_bypass[core_idx] = 0;
+      rdt_marked_bypass[core_idx] = false;
+    #endif
   }
 
 #ifdef IST_LRU
