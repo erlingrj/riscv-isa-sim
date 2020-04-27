@@ -249,9 +249,10 @@ void state_t::init_ibda(){
   }
   void state_t::ist_add(reg_t addr){
     std::list<reg_t>::iterator it = std::find(ist_tag->begin(), ist_tag->end(), addr);
-    assert (it == ist_tag->end());
-
-    if (ist_tag->size() >= IST_SIZE) {
+    if (it != ist_tag->end()) {
+      ist_tag->erase(it);
+      ist_tag->push_front(addr);
+    } else if (ist_tag->size() >= IST_SIZE) {
       ist_tag->pop_back();
       ist_evictions++;
     }
