@@ -214,6 +214,7 @@ class vectorUnit_t {
 #define RDT_MARKED_BIT
 #define RDT_BYPASSABLE
 
+
 #define IST_LRU
 #define IST_WAYS 2
 #define IST_SETS IST_SIZE/IST_WAYS
