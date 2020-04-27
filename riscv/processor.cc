@@ -224,8 +224,10 @@ void state_t::init_ibda(){
     store[core_idx] = false;
     load[core_idx] = false;
     amo[core_idx] = false;
-    rdt_bypass[core_idx] = 0;
-    rdt_marked_bypass[core_idx] = false;
+    #ifdef RDT_BYPASSABLE
+      rdt_bypass[core_idx] = 0;
+      rdt_marked_bypass[core_idx] = false;
+    #endif
   }
 
 
@@ -348,7 +350,7 @@ void state_t::init_ibda(){
               rdt_marked[rs1[i]] = true;
             #endif
 
-            fprintf(stderr, "ibda added rs1 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs1[i], pc, instruction_pc[i]);
+          fprintf(stderr, "ibda added rs1 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs1[i], pc, instruction_pc[i]);
             ist_add(pc);
             // avoid unnecessary rdt additions
             mark_cnt++;
