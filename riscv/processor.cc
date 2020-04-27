@@ -195,15 +195,23 @@ void state_t::reset(reg_t max_isa)
   pmpcfg[0] = PMP_R | PMP_W | PMP_X | PMP_NAPOT;
   pmpaddr[0] = ~reg_t(0);
 
-#ifdef IST_LRU
-  for (int i = 0; i <IST_SETS; ++i) {
-    ist_tag[i] = new std::list<reg_t>; 
-    ist_evictions[i] = 0;
-  }
+#ifdef IST_FULLY_ASSOCIATIVE
+
+ist_tag = new std::list<reg_t>;
+ist_evictions = 0;
+
 #else
-  ist = new std::unordered_map<reg_t, reg_t>; // Use map to also store number of lookups
+  #ifdef IST_SET_ASSOCIATIVE
+    for (int i = 0; i <IST_SETS; ++i) {
+      ist_tag[i] = new std::list<reg_t>; 
+      ist_evictions[i] = 0;
+    }
+  #else
+    ist = new std::unordered_map<reg_t, reg_t>; // Use map to also store number of lookups
+  #endif
+    core_idx = 0;
+
 #endif
-  core_idx = 0;
 }
 
 void state_t::init_ibda(){
@@ -220,57 +228,85 @@ void state_t::init_ibda(){
     rdt_marked_bypass[core_idx] = false;
   }
 
-#ifdef IST_LRU
 
+#ifdef IST_HASH_DAVID
 #define IST_INDEX(x) (((x^(x/(IST_SETS)))>>1)&(IST_SETS-1))
+#endif
+
+
+#ifdef IST_FULLY_ASSOCIATIVE
   bool state_t::in_ist(reg_t addr){
-    int ist_index = IST_INDEX(addr);
-    std::list<reg_t>::iterator it = std::find (ist_tag[ist_index]->begin(), ist_tag[ist_index]->end(), addr); 
-    if (it != ist_tag[ist_index]->end()) {
-      // Found it
-      ist_tag[ist_index]->erase(it);
-      ist_tag[ist_index]->push_front(addr);
+    std::list<reg_t>::iterator it = std::find(ist_tag->begin(), ist_tag->end(),addr);
+    if (it != ist_tag->end()) {
+      ist_tag->erase(it);
+      ist_tag->push_front(addr);
       return true;
     } else {
       return false;
     }
   }
-
   void state_t::ist_add(reg_t addr){
-    int ist_index = IST_INDEX(addr);
-    std::list<reg_t>::iterator it = std::find (ist_tag[ist_index]->begin(), ist_tag[ist_index]->end(), addr);
-    if (it != ist_tag[ist_index]->end()) {
-      // Found it
-      ist_tag[ist_index]->erase(it);
-    } else if (ist_tag[ist_index]->size() >= IST_WAYS) {
-      // Delete LRU
-      reg_t evict = ist_tag[ist_index]->back();
-      fprintf(stderr, "ist adding " "0x%016" PRIx64 "evicting " "0x%016" PRIx64 "\n", addr, evict);
-      ist_tag[ist_index]->pop_back();
-      ist_evictions[ist_index]++;
-      
-    }
+    std::list<reg_t>::iterator it = std::find(ist_tag->begin(), ist_tag->end(), addr);
+    assert (it == ist_tag->end());
 
-    // Add new entry to head of LRU queue
-    ist_tag[ist_index]->push_front(addr);
-    assert(ist_tag[ist_index]->size() <= IST_WAYS);
-  };
+    if (ist_tag->size() >= IST_SIZE) {
+      ist_tag->pop_back();
+      ist_evictions++;
+    }
+    ist_tag->push_front(addr);
+  }
+
 #else
-  bool state_t::in_ist(reg_t addr){
-    std::unordered_map<reg_t, reg_t>::iterator in_ist = ist->find(addr);
-    if (in_ist != ist->end()) {
-      //fprintf(stderr, "Lookup: %lu found\n", addr);
-      ++in_ist->second;
-      return true;
-    } else {
-      return false;
+  #ifdef IST_SET_ASSOCIATIVE
+    bool state_t::in_ist(reg_t addr){
+      int ist_index = IST_INDEX(addr);
+      std::list<reg_t>::iterator it = std::find (ist_tag[ist_index]->begin(), ist_tag[ist_index]->end(), addr); 
+      if (it != ist_tag[ist_index]->end()) {
+        // Found it
+        ist_tag[ist_index]->erase(it);
+        ist_tag[ist_index]->push_front(addr);
+        return true;
+      } else {
+        return false;
+      }
     }
-  };
 
-  void state_t::ist_add(reg_t addr){
-    //fprintf(stderr, "somthing added to ist. size=%u\n", ist->size());
-    ist->insert({addr, 0});
-  };
+    void state_t::ist_add(reg_t addr){
+      int ist_index = IST_INDEX(addr);
+      std::list<reg_t>::iterator it = std::find (ist_tag[ist_index]->begin(), ist_tag[ist_index]->end(), addr);
+      if (it != ist_tag[ist_index]->end()) {
+        // Found it
+        ist_tag[ist_index]->erase(it);
+      } else if (ist_tag[ist_index]->size() >= IST_WAYS) {
+        // Delete LRU
+        reg_t evict = ist_tag[ist_index]->back();
+        fprintf(stderr, "ist adding " "0x%016" PRIx64 "evicting " "0x%016" PRIx64 "\n", addr, evict);
+        ist_tag[ist_index]->pop_back();
+        ist_evictions[ist_index]++;
+        
+      }
+
+      // Add new entry to head of LRU queue
+      ist_tag[ist_index]->push_front(addr);
+      assert(ist_tag[ist_index]->size() <= IST_WAYS);
+    };
+  #else
+    bool state_t::in_ist(reg_t addr){
+      std::unordered_map<reg_t, reg_t>::iterator in_ist = ist->find(addr);
+      if (in_ist != ist->end()) {
+        //fprintf(stderr, "Lookup: %lu found\n", addr);
+        ++in_ist->second;
+        return true;
+      } else {
+        return false;
+      }
+    };
+
+    void state_t::ist_add(reg_t addr){
+      //fprintf(stderr, "somthing added to ist. size=%u\n", ist->size());
+      ist->insert({addr, 0});
+    };
+  #endif
 #endif
 
   void state_t::update_ibda(insn_t insn, processor_t* p, reg_t insn_pc){
@@ -951,10 +987,15 @@ reg_t processor_t::get_csr(int which)
   }
   if(which == CSR_MHPMCOUNTER9 || which == CSR_HPMCOUNTER9) {
     // Print the number of evictions per set
-    #ifdef IST_LRU
+    #ifdef IST_SET_ASSOCIATIVE
     for (int i = 0; i<IST_SETS; ++i) {
       fprintf(stderr, "%lu IST_evictions-%d\n", state.ist_evictions[i], i);
     }
+
+    #else
+    #ifdef IST_FULLY_ASSOCIATIVE
+    fprintf(stderr, "%lu IST_evictions\n", state.ist_evictions);
+    #endif
     #endif
 
     return 0;

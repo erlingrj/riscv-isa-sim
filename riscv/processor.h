@@ -215,8 +215,12 @@ class vectorUnit_t {
 #define RDT_BYPASSABLE
 
 #define IST_LRU
+#define IST_FULLY_ASSOCIATIVE
+//#define IST_SET_ASSOCIATIVE
 #define IST_WAYS 2
 #define IST_SETS IST_SIZE/IST_WAYS
+#define IST_HASH_DAVID
+
 
 
 
@@ -275,11 +279,16 @@ struct state_t
   reg_t rdt_marked_bypass[CORE_WIDTH];
   #endif
   
-  #ifdef IST_LRU
+  #ifdef IST_FULLY_ASSOCIATIVE
+  std::list<reg_t> * ist_tag;
+  reg_t ist_evictions;
+  #else
+  #ifdef IST_SET_ASSOCIATIVE
   std::list<reg_t> * ist_tag[IST_SETS];
   reg_t ist_evictions[IST_SETS];
   #else
   std::unordered_map<reg_t, reg_t> * ist;
+  #endif
   #endif
   reg_t a_cnt;
   reg_t b_cnt;
