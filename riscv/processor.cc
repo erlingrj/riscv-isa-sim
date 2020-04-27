@@ -283,7 +283,7 @@ void state_t::init_ibda(){
       } else if (ist_tag[ist_index]->size() >= IST_WAYS) {
         // Delete LRU
         reg_t evict = ist_tag[ist_index]->back();
-        fprintf(stderr, "ist adding " "0x%016" PRIx64 "evicting " "0x%016" PRIx64 "\n", addr, evict);
+//        fprintf(stderr, "ist adding " "0x%016" PRIx64 "evicting " "0x%016" PRIx64 "\n", addr, evict);
         ist_tag[ist_index]->pop_back();
         ist_evictions[ist_index]++;
         
@@ -317,8 +317,8 @@ void state_t::init_ibda(){
     ibda[core_idx] = ((load[core_idx] || store[core_idx] ) && !amo[core_idx]) || agi[core_idx];
     instruction_pc[core_idx] = insn_pc;
     uint64_t bits = insn.bits() & ((1ULL << (8 * insn_length(insn.bits()))) - 1);
-   fprintf(stderr, "0x%016" PRIx64 " (0x%08" PRIx64 ") core_idx:%d ibda:%d %s\n",
-                       insn_pc, bits, core_idx, ibda[core_idx],p->disassembler->disassemble(insn).c_str());
+  // fprintf(stderr, "0x%016" PRIx64 " (0x%08" PRIx64 ") core_idx:%d ibda:%d %s\n",
+  //                     insn_pc, bits, core_idx, ibda[core_idx],p->disassembler->disassemble(insn).c_str());
    //fprintf(stderr, "insn_pc: 0x%016" PRIx64 " rd: %d rs1: %d rs2: %d\n", insn_pc, rd, rs1, rs2);
     
     if(core_idx == (CORE_WIDTH - 1)) {
@@ -351,7 +351,7 @@ void state_t::init_ibda(){
               rdt_marked[rs1[i]] = true;
             #endif
 
-          fprintf(stderr, "ibda added rs1 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs1[i], pc, instruction_pc[i]);
+    //      fprintf(stderr, "ibda added rs1 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs1[i], pc, instruction_pc[i]);
             ist_add(pc);
             // avoid unnecessary rdt additions
             mark_cnt++;
@@ -389,7 +389,7 @@ void state_t::init_ibda(){
               rdt_marked[rs2[i]] = true;
             #endif
 
-            fprintf(stderr, "ibda added rs1 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs2[i], pc, instruction_pc[i]);
+      //      fprintf(stderr, "ibda added rs1 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs2[i], pc, instruction_pc[i]);
             ist_add(pc);
             // avoid unnecessary rdt additions
             mark_cnt++;
