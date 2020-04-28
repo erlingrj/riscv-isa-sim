@@ -30,7 +30,7 @@ int main(int argc, char** argv)
 
   struct ibda_params _ibda;
 
-  processor_t p(isa, DEFAULT_VARCH, 0, _ibda, 0);
+  processor_t p(isa, DEFAULT_VARCH, 0, 0, _ibda);
   if (extension) {
     p.register_extension(extension());
   }
