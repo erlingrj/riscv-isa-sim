@@ -216,8 +216,8 @@ class vectorUnit_t {
 
 
 #define IST_LRU
-#define IST_FULLY_ASSOCIATIVE
-//#define IST_SET_ASSOCIATIVE
+//#define IST_FULLY_ASSOCIATIVE
+#define IST_SET_ASSOCIATIVE
 #define IST_WAYS 2
 #define IST_SETS IST_SIZE/IST_WAYS
 #define IST_HASH_DAVID

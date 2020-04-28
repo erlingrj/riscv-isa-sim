@@ -195,6 +195,11 @@ void state_t::reset(reg_t max_isa)
   pmpcfg[0] = PMP_R | PMP_W | PMP_X | PMP_NAPOT;
   pmpaddr[0] = ~reg_t(0);
 
+
+#ifdef IST_VICTIM_BUFFER
+  ist_victim_buffer = new std::list<reg_t>;
+#endif
+
 #ifdef IST_FULLY_ASSOCIATIVE
 
 ist_tag = new std::list<reg_t>;
