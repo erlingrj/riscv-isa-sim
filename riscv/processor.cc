@@ -245,6 +245,7 @@ void state_t::reset(reg_t max_isa)
 }
 
 void state_t::init_ibda(){
+  printf("init_ibda 1\n");
     rd[core_idx] = 0;
     rs1[core_idx] = 0;
     rs2[core_idx] = 0;
@@ -256,7 +257,10 @@ void state_t::init_ibda(){
     amo[core_idx] = false;
     rdt_bypass[core_idx] = 0;
     rdt_marked_bypass[core_idx] = false;
+  printf("init_ibda 2\n");
+
   }
+
 
 
 
@@ -271,6 +275,7 @@ reg_t state_t::ist_tag(reg_t addr) {
   return addr;
 }
   bool state_t::in_ist(reg_t addr){
+  printf("in_ist 1\n");
     if (ibda_p.ist_fully_associative) {
       std::list<reg_t>::iterator it = std::find(ist_tag_fa->begin(), ist_tag_fa->end(),addr);
       if (it != ist_tag_fa->end()) {
@@ -306,7 +311,7 @@ reg_t state_t::ist_tag(reg_t addr) {
             false_positives += 1;
           }
         }
-
+          printf("in_ist 2\n");
         return true;
       } else {
         
@@ -318,6 +323,8 @@ reg_t state_t::ist_tag(reg_t addr) {
                 false_positives += 1;
               }
             }
+              printf("in_ist 2\n");
+
             return true;
           }          
         }
@@ -328,6 +335,8 @@ reg_t state_t::ist_tag(reg_t addr) {
           false_negatives += 1;
         }
       }
+        printf("in_ist2\n");
+
       return false;
     }
 
@@ -339,10 +348,14 @@ reg_t state_t::ist_tag(reg_t addr) {
         return false;
       } 
     }
+  printf("in_ist 2\n");
+
   }
 
 
   void state_t::ist_add(reg_t addr){
+  printf("ist_add 1\n");
+
     if (ibda_p.ist_perfect) {
       ist_tag_gm->insert({addr, 0});
     } else if (ibda_p.ist_fully_associative) {
