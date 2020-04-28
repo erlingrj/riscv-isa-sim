@@ -253,11 +253,11 @@ void state_t::init_ibda(){
 
 
 
-reg_t ist_get_index(reg_t addr) {
+reg_t state_t::ist_get_index(reg_t addr) {
   return ((addr ^ (addr/ibda_p.ist_sets) ) >> 1) & (ibda_p.ist_sets-1);
 }
 
-reg_t ist_tag(reg_t addr) {
+reg_t state_t::ist_tag(reg_t addr) {
   if (ibda_p.ibda_tag_pc) {
     return (addr >> (32 - ibda_p.ibda_tag_pc_bits));
   }
