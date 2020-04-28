@@ -13,23 +13,23 @@
 #include "debug_rom_defines.h"
 #include <unordered_set>
 #include <list>
-
+#include "ibda.h"
 
 // IBDA simulation tuff
-bool ist_fully_associative;
-bool ist_set_associative;
-reg_t ist_sz;
-reg_t ist_ways;
-reg_t ist_wp;
-reg_t tag_sz;
-reg_t ist_vb_sz;
-int ist_sets;
-reg_t ibda_tag_pc_bits;
-bool ist_vb;
-bool ibda_tag_pc;
-bool ibda_compare_perfect;
-bool ist_perfect;
-int trace_level;
+extern bool ist_fully_associative;
+extern bool ist_set_associative;
+extern reg_t ist_sz;
+extern reg_t ist_ways;
+extern reg_t ist_wp;
+extern reg_t tag_sz;
+extern reg_t ist_vb_sz;
+extern int ist_sets;
+extern reg_t ibda_tag_pc_bits;
+extern bool ist_vb;
+extern bool ibda_tag_pc;
+extern bool ibda_compare_perfect;
+extern bool ist_perfect;
+extern int trace_level;
 
 
 

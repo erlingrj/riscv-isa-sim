@@ -13,7 +13,7 @@
 #include <string>
 #include <memory>
 #include "../VERSION"
-#include "processor.h"
+#include "ibda.h"
 
 static void help(int exit_code = 1)
 {
