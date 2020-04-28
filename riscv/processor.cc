@@ -267,7 +267,7 @@ void state_t::init_ibda(){
 
 reg_t state_t::ist_get_index(reg_t addr) {
   reg_t res =  ((addr ^ (addr/ibda_p.ist_sets) ) >> 1) & (ibda_p.ist_sets/2-1);
-  assert(res > 0 && res < ibda.ist_sets);
+  assert(res > 0 && res < ibda_p.ist_sets);
   return res;
 }
 
