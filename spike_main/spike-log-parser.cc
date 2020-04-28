@@ -28,7 +28,7 @@ int main(int argc, char** argv)
   parser.option(0, "isa", 1, [&](const char* s){isa = s;});
   parser.parse(argv);
 
-  struct ibda_params _ibda
+  struct ibda_params _ibda;
 
   processor_t p(isa, DEFAULT_VARCH, 0, _ibda, 0);
   if (extension) {
