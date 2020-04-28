@@ -16,9 +16,20 @@
 #include <stdexcept>
 #include <string>
 #include <algorithm>
+#include <stdarg.h>
 
 #undef STATE
 #define STATE state
+
+
+void debug_print(const char *fmt, ...) {
+    if (trace_level > 0) {
+      va_list args;
+      va_start(args, fmt);
+      vprintf(fmt, args);
+      va_end(args);
+    }
+}
 
 processor_t::processor_t(const char* isa, const char* varch, simif_t* sim,
                          uint32_t id, bool halt_on_reset)
@@ -195,28 +206,34 @@ void state_t::reset(reg_t max_isa)
   pmpcfg[0] = PMP_R | PMP_W | PMP_X | PMP_NAPOT;
   pmpaddr[0] = ~reg_t(0);
 
+  if (ist_vb) {
+    ist_victim_buffer = new std::list<reg_t>;
+    vb_hits = 0;
+  }
+  
 
-#ifdef IST_VICTIM_BUFFER
-  ist_victim_buffer = new std::list<reg_t>;
-#endif
+  if (ist_fully_associative) {
+    ist_tag_fa = new std::list<reg_t>;
+    ist_evictions_fa = 0;
+  }
 
-#ifdef IST_FULLY_ASSOCIATIVE
 
-ist_tag = new std::list<reg_t>;
-ist_evictions = 0;
-
-#else
-  #ifdef IST_SET_ASSOCIATIVE
-    for (int i = 0; i <IST_SETS; ++i) {
-      ist_tag[i] = new std::list<reg_t>; 
-      ist_evictions[i] = 0;
+  if (ist_set_associative) {
+    ist_tag_sa = new std::list<reg_t>*[ist_sets];
+    ist_evictions_sa = new reg_t[ist_sets];
+    for (int i = 0; i <ist_sets; ++i) {
+      ist_tag_sa[i] = new std::list<reg_t>; 
+      ist_evictions_sa[i] = 0;
     }
-  #else
-    ist = new std::unordered_map<reg_t, reg_t>; // Use map to also store number of lookups
-  #endif
-    core_idx = 0;
+  }
+  
+  if (ist_perfect || ibda_compare_perfect) {
+    ist_tag_gm = new std::unordered_set<reg_t>; // Use map to also store number of lookups
+  }
+  false_negatives = 0;
+  false_positives = 0;
+  core_idx = 0;
 
-#endif
 }
 
 void state_t::init_ibda(){
@@ -229,227 +246,222 @@ void state_t::init_ibda(){
     store[core_idx] = false;
     load[core_idx] = false;
     amo[core_idx] = false;
-    #ifdef RDT_BYPASSABLE
-      rdt_bypass[core_idx] = 0;
-      rdt_marked_bypass[core_idx] = false;
-    #endif
+    rdt_bypass[core_idx] = 0;
+    rdt_marked_bypass[core_idx] = false;
   }
 
 
-#ifdef IST_HASH_DAVID
-#define IST_INDEX(x) (((x^(x/(IST_SETS)))>>1)&(IST_SETS-1))
-#endif
 
+reg_t ist_get_index(reg_t addr) {
+  return ((addr ^ (addr/ist_sets) ) >> 1) & (ist_sets-1);
+}
 
-#ifdef IST_FULLY_ASSOCIATIVE
+reg_t ist_tag(reg_t addr) {
+  if (ibda_tag_pc) {
+    return (addr >> (32 - ibda_tag_pc_bits));
+  }
+  return addr;
+}
   bool state_t::in_ist(reg_t addr){
-    std::list<reg_t>::iterator it = std::find(ist_tag->begin(), ist_tag->end(),addr);
-    if (it != ist_tag->end()) {
-      ist_tag->erase(it);
-      ist_tag->push_front(addr);
+    if (ist_fully_associative) {
+      std::list<reg_t>::iterator it = std::find(ist_tag_fa->begin(), ist_tag_fa->end(),addr);
+      if (it != ist_tag_fa->end()) {
+        ist_tag_fa->erase(it);
+        ist_tag_fa->push_front(addr);
+        if (ibda_compare_perfect) {
+          std::unordered_set<reg_t>::iterator in_ist = ist_tag_gm->find(addr);
+          if (in_ist == ist_tag_gm->end()) {
+            false_positives += 1;
+          }
+        }
+        return true;
+    } else {
+      if (ibda_compare_perfect) {
+          std::unordered_set<reg_t>::iterator in_ist = ist_tag_gm->find(addr);
+          if (in_ist != ist_tag_gm->end()) {
+            false_negatives += 1;
+          }
+        }
+      return false;
+    }
+
+    } else if (ist_set_associative) {
+      reg_t ist_index = ist_get_index(addr);
+      std::list<reg_t>::iterator it = std::find (ist_tag_sa[ist_index]->begin(), ist_tag_sa[ist_index]->end(), addr); 
+      if (it != ist_tag_sa[ist_index]->end()) {
+        // Found it
+        ist_tag_sa[ist_index]->erase(it);
+        ist_tag_sa[ist_index]->push_front(addr);
+        if (ibda_compare_perfect) {
+          std::unordered_set<reg_t>::iterator in_ist = ist_tag_gm->find(addr);
+          if (in_ist == ist_tag_gm->end()) {
+            false_positives += 1;
+          }
+        }
+
+        return true;
+      } else {
+        
+        if (ist_vb) {
+          if (in_vb(addr)) {
+            if (ibda_compare_perfect) {
+              std::unordered_set<reg_t>::iterator in_ist = ist_tag_gm->find(addr);
+              if (in_ist == ist_tag_gm->end()) {
+                false_positives += 1;
+              }
+            }
+            return true;
+          }          
+        }
+
+      if (ibda_compare_perfect) {
+        std::unordered_set<reg_t>::iterator in_ist = ist_tag_gm->find(addr);
+        if (in_ist != ist_tag_gm->end()) {
+          false_negatives += 1;
+        }
+      }
+      return false;
+    }
+
+    } else if (ist_perfect) {
+      std::unordered_set<reg_t>::iterator in_ist = ist_tag_gm->find(addr);
+      if (in_ist != ist_tag_gm->end()) {
+        return true;
+      } else {
+        return false;
+      } 
+    }
+  }
+
+
+  void state_t::ist_add(reg_t addr){
+    if (ist_perfect) {
+      ist_tag_gm->insert({addr, 0});
+    } else if (ist_fully_associative) {
+        
+      std::list<reg_t>::iterator it = std::find(ist_tag_fa->begin(), ist_tag_fa->end(), addr);
+      if (it != ist_tag_fa->end()) {
+        ist_tag_fa->erase(it);
+      } else if (ist_tag_fa->size() >= ist_sz) {
+        ist_tag_fa->pop_back();
+        ist_evictions_fa++;
+      }
+      ist_tag_fa->push_front(addr);
+      assert(!(ist_tag_fa->size() > ist_sz));
+      if (ibda_compare_perfect) { 
+        ist_tag_gm->insert({addr, 0});
+      }
+    } else if (ist_set_associative) {
+      
+      reg_t ist_index = ist_get_index(addr);
+      std::list<reg_t>::iterator it = std::find (ist_tag_sa[ist_index]->begin(), ist_tag_sa[ist_index]->end(), addr);
+      if (it != ist_tag_sa[ist_index]->end()) {
+        // Found it
+        ist_tag_sa[ist_index]->erase(it);
+      } else if (ist_tag_sa[ist_index]->size() >= ist_sz) {
+        // Delete LRU
+        reg_t evict = ist_tag_sa[ist_index]->back();
+        debug_print("ist adding " "0x%016" PRIx64 " evicting " "0x%016" PRIx64 "\n", addr, evict);
+        ist_tag_sa[ist_index]->pop_back();
+
+        if (ist_vb) {
+          vb_add(evict);
+        }
+      }
+
+      // Add new entry to head of LRU queue
+      ist_tag_sa[ist_index]->push_front(addr);
+      assert(ist_tag_sa[ist_index]->size() <= ist_sz);
+      
+      if (ibda_compare_perfect) { 
+        ist_tag_gm->insert({addr, 0});
+      }
+    }
+  }
+
+  void state_t::vb_add(reg_t addr) {
+    if (ist_victim_buffer->size() >= ist_vb_sz) {
+          ist_victim_buffer->pop_back();
+        }
+        ist_victim_buffer->push_front(addr);
+        assert(!(ist_victim_buffer->size() > ist_vb_sz));
+  }
+
+  bool state_t::in_vb(reg_t addr) {
+    std::list<reg_t>::iterator it = std::find (ist_victim_buffer->begin(), ist_victim_buffer->end(), addr);
+    if( it != ist_victim_buffer->end()) {
+      // Found it in the victim buffer
+      ist_victim_buffer->erase(it);
+      ist_add(addr);
+      vb_hits += 1;
       return true;
     } else {
       return false;
-    }
+    }   
   }
-  void state_t::ist_add(reg_t addr){
-    std::list<reg_t>::iterator it = std::find(ist_tag->begin(), ist_tag->end(), addr);
-    if (it != ist_tag->end()) {
-      ist_tag->erase(it);
-    } else if (ist_tag->size() >= IST_SIZE) {
-      ist_tag->pop_back();
-      ist_evictions++;
-    }
-    ist_tag->push_front(addr);
-    assert(!(ist_tag->size() > IST_SIZE));
-  }
-
-#else
-  #ifdef IST_SET_ASSOCIATIVE
-
-  #ifdef IST_VICTIM_BUFFER
-    bool state_t::in_ist(reg_t addr){
-      int ist_index = IST_INDEX(addr);
-      std::list<reg_t>::iterator it = std::find (ist_tag[ist_index]->begin(), ist_tag[ist_index]->end(), addr); 
-      if (it != ist_tag[ist_index]->end()) {
-        // Found it
-        ist_tag[ist_index]->erase(it);
-        ist_tag[ist_index]->push_front(addr);
-        return true;
-      } else {
-        std::list<reg_t>::iterator it = std::find (ist_victim_buffer->begin(), ist_victim_buffer->end(), addr);
-        if( it != ist_victim_buffer->end()) {
-          // Found it in the victim buffer
-          ist_victim_buffer->erase(it);
-          ist_add(addr);
-          return true;
-        } else {
-          return false;
-        }
-      }
-    }
-
-    void state_t::ist_add(reg_t addr){
-      int ist_index = IST_INDEX(addr);
-      std::list<reg_t>::iterator it = std::find (ist_tag[ist_index]->begin(), ist_tag[ist_index]->end(), addr);
-      if (it != ist_tag[ist_index]->end()) {
-        // Found it
-        ist_tag[ist_index]->erase(it);
-      } else if (ist_tag[ist_index]->size() >= IST_WAYS) {
-        // Delete LRU
-        reg_t evict = ist_tag[ist_index]->back();
-//        fprintf(stderr, "ist adding " "0x%016" PRIx64 "evicting " "0x%016" PRIx64 "\n", addr, evict);
-        ist_tag[ist_index]->pop_back();
-
-        if (ist_victim_buffer->size() >= IST_VICTIM_BUFFER_SIZE) {
-          ist_victim_buffer->pop_back();
-        }
-        ist_victim_buffer->push_front(evict);
-        assert(!(ist_victim_buffer->size() > IST_VICTIM_BUFFER_SIZE));
-      }
-
-      // Add new entry to head of LRU queue
-      ist_tag[ist_index]->push_front(addr);
-      assert(ist_tag[ist_index]->size() <= IST_WAYS);
-    };
-  #else
-    bool state_t::in_ist(reg_t addr){
-      int ist_index = IST_INDEX(addr);
-      std::list<reg_t>::iterator it = std::find (ist_tag[ist_index]->begin(), ist_tag[ist_index]->end(), addr); 
-      if (it != ist_tag[ist_index]->end()) {
-        // Found it
-        ist_tag[ist_index]->erase(it);
-        ist_tag[ist_index]->push_front(addr);
-        return true;
-      } else {
-        return false;
-      }
-    }
-
-    void state_t::ist_add(reg_t addr){
-      int ist_index = IST_INDEX(addr);
-      std::list<reg_t>::iterator it = std::find (ist_tag[ist_index]->begin(), ist_tag[ist_index]->end(), addr);
-      if (it != ist_tag[ist_index]->end()) {
-        // Found it
-        ist_tag[ist_index]->erase(it);
-      } else if (ist_tag[ist_index]->size() >= IST_WAYS) {
-        // Delete LRU
-        reg_t evict = ist_tag[ist_index]->back();
-//        fprintf(stderr, "ist adding " "0x%016" PRIx64 "evicting " "0x%016" PRIx64 "\n", addr, evict);
-        ist_tag[ist_index]->pop_back();
-        ist_evictions[ist_index]++;
-        
-      }
-
-      // Add new entry to head of LRU queue
-      ist_tag[ist_index]->push_front(addr);
-      assert(ist_tag[ist_index]->size() <= IST_WAYS);
-    };
-  #endif  
-  #else
-    bool state_t::in_ist(reg_t addr){
-      std::unordered_map<reg_t, reg_t>::iterator in_ist = ist->find(addr);
-      if (in_ist != ist->end()) {
-        //fprintf(stderr, "Lookup: %lu found\n", addr);
-        ++in_ist->second;
-        return true;
-      } else {
-        return false;
-      }
-    };
-
-    void state_t::ist_add(reg_t addr){
-      //fprintf(stderr, "somthing added to ist. size=%u\n", ist->size());
-      ist->insert({addr, 0});
-    };
-  #endif
-#endif
 
   void state_t::update_ibda(insn_t insn, processor_t* p, reg_t insn_pc){
     agi[core_idx] = in_ist(insn_pc);
     ibda[core_idx] = ((load[core_idx] || store[core_idx] ) && !amo[core_idx]) || agi[core_idx];
     instruction_pc[core_idx] = insn_pc;
     uint64_t bits = insn.bits() & ((1ULL << (8 * insn_length(insn.bits()))) - 1);
-  // fprintf(stderr, "0x%016" PRIx64 " (0x%08" PRIx64 ") core_idx:%d ibda:%d %s\n",
-  //                     insn_pc, bits, core_idx, ibda[core_idx],p->disassembler->disassemble(insn).c_str());
+    debug_print("0x%016" PRIx64 " (0x%08" PRIx64 ") core_idx:%d ibda:%d %s\n",
+                       insn_pc, bits, core_idx, ibda[core_idx],p->disassembler->disassemble(insn).c_str());
    //fprintf(stderr, "insn_pc: 0x%016" PRIx64 " rd: %d rs1: %d rs2: %d\n", insn_pc, rd, rs1, rs2);
     
     if(core_idx == (CORE_WIDTH - 1)) {
       // Core width is "full" we can now do IBDA and emulate n-wide cores
       size_t mark_cnt = 0;
       size_t i = 0;
-      while (i < CORE_WIDTH && mark_cnt < IST_WRITE_PORTS) {
+      while (i < CORE_WIDTH && mark_cnt <ist_wp) {
         if(ibda[i]){
 
           if(rs1[i]) {
-            #ifdef RDT_MARKED_BIT
             bool is_marked = rdt_marked[rs1[i]];
-            #endif
             reg_t pc = rdt[rs1[i]];
             // If we have a bypassable queue. We have to check previous
             // candidates
-            #ifdef RDT_BYPASSABLE
-              for(size_t j = 0; j<i; ++j) {
-                if (rdt_bypass[j] == rs1[i]) {
-                  pc = instruction_pc[j];
-                  #ifdef RDT_MARKED_BIT
-                  is_marked = rdt_marked_bypass[j];
-                  #endif
-                }
+            for(size_t j = 0; j<i; ++j) {
+              if (rdt_bypass[j] == rs1[i]) {
+                pc = instruction_pc[j];
+                is_marked = rdt_marked_bypass[j];
               }
-            #endif
-
-            #ifdef RDT_MARKED_BIT
+            }
+            
             if(!is_marked) {
               rdt_marked[rs1[i]] = true;
-            #endif
-
-    //      fprintf(stderr, "ibda added rs1 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs1[i], pc, instruction_pc[i]);
-            ist_add(pc);
-            // avoid unnecessary rdt additions
-            mark_cnt++;
-
-            #ifdef RDT_MARKED_BIT
+              debug_print("ibda added rs1 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs1[i], pc, instruction_pc[i]);
+              ist_add(pc);
+              // avoid unnecessary rdt additions
+              mark_cnt++;
             }
-            #endif
           
           }
 
           
-          if (!(mark_cnt < IST_WRITE_PORTS)) break;
+          if (!(mark_cnt < ist_wp)) break;
 
 
           if(rs2[i] && (!store[i] || amo[i]))  {
-            #ifdef RDT_MARKED_BIT
             bool is_marked = rdt_marked[rs2[i]];
-            #endif
             reg_t pc = rdt[rs2[i]];
             // If we have a bypassable queue. We have to check previous
             // candidates
-            #ifdef RDT_BYPASSABLE
               for(size_t j = 0; j<i; ++j) {
                 if (rdt_bypass[j] == rs2[i]) {
                   pc = instruction_pc[j];
-                  #ifdef RDT_MARKED_BIT
                   is_marked = rdt_marked_bypass[j];
-                  #endif
                 }
               }
-            #endif
 
-            #ifdef RDT_MARKED_BIT
             if(!is_marked) {
               rdt_marked[rs2[i]] = true;
-            #endif
 
-      //      fprintf(stderr, "ibda added rs1 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs2[i], pc, instruction_pc[i]);
-            ist_add(pc);
-            // avoid unnecessary rdt additions
-            mark_cnt++;
-
-            #ifdef RDT_MARKED_BIT
+              debug_print( "ibda added rs1 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs2[i], pc, instruction_pc[i]);
+              ist_add(pc);
+              // avoid unnecessary rdt additions
+              mark_cnt++;
             }
-            #endif
           
           }
         } //endif(ibda(i))
@@ -459,24 +471,18 @@ void state_t::init_ibda(){
       for (int i = 0; i<CORE_WIDTH; i++) {
         if(rd[i]){
           rdt[rd[i]] = instruction_pc[i];
-          #ifdef RDT_MARKED_BIT
-            rdt_marked[rd[i]] = ibda[i];
-          #endif
+          rdt_marked[rd[i]] = ibda[i];
         }
       }
   
     }
 
-    #ifdef RDT_BYPASSABLE
+
     // Update RDT
     if (rd[core_idx]) {
       rdt_bypass[core_idx] = rd[core_idx];
-      #ifdef RDT_MARKED_BIT
-        rdt_marked_bypass[core_idx] = ibda[core_idx];
-      #endif
+      rdt_marked_bypass[core_idx] = ibda[core_idx];
     }
-    #endif
-
       // update counter
     if(ibda[core_idx]) {
         b_cnt++;
@@ -505,7 +511,7 @@ void state_t::init_ibda(){
     
   }
 
-// For IBDA. Increases the core_width_count counter and wraps around
+// For IBDA. Increases the CORE_WIDTH_count counter and wraps around
 void state_t::advance_core_idx() {
   if (++core_idx == CORE_WIDTH) {
     core_idx = 0;
@@ -1024,11 +1030,11 @@ reg_t processor_t::get_csr(int which)
   }
   if(which == CSR_MHPMCOUNTER7 || which == CSR_HPMCOUNTER7) {
     // Print out IST size
-    #ifndef IST_LRU
-      fprintf(stderr, "%lu IST_size\n", state.ist->size());
-    #endif  
+    fprintf(stderr, "%lu false-positives\n%lu false-negatives\n", state.false_positives, state.false_negatives);
+    
     return 0;
   }
+  /*
   if(which == CSR_MHPMCOUNTER8 || which == CSR_HPMCOUNTER8) {
     // Print out the number of lookups on each
     #ifndef IST_LRU
@@ -1056,7 +1062,7 @@ reg_t processor_t::get_csr(int which)
 
     return 0;
   }
-    
+    */
 //  if(which == CSR_MHPMCOUNTER10 || which == CSR_HPMCOUNTER10)
 //    return state.load_store_cnt;
 

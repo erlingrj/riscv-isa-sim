@@ -11,8 +11,27 @@
 #include <map>
 #include <cassert>
 #include "debug_rom_defines.h"
-#include <unordered_map>
+#include <unordered_set>
 #include <list>
+
+
+// IBDA simulation tuff
+bool ist_fully_associative;
+bool ist_set_associative;
+reg_t ist_sz;
+reg_t ist_ways;
+reg_t ist_wp;
+reg_t tag_sz;
+reg_t ist_vb_sz;
+int ist_sets;
+reg_t ibda_tag_pc_bits;
+bool ist_vb;
+bool ibda_tag_pc;
+bool ibda_compare_perfect;
+bool ist_perfect;
+int trace_level;
+
+
 
 class processor_t;
 class mmu_t;
@@ -208,21 +227,21 @@ class vectorUnit_t {
     }
 };
 
-#define IST_SIZE 128
-#define IST_WRITE_PORTS 4
+//#define IST_SIZE 128
+//#define IST_WRITE_PORTS 4
 #define CORE_WIDTH 2
-#define RDT_MARKED_BIT
-#define RDT_BYPASSABLE
+//#define RDT_MARKED_BIT
+//#define RDT_BYPASSABLE
 
 
-#define IST_LRU
+//#define IST_LRU
 //#define IST_FULLY_ASSOCIATIVE
-#define IST_SET_ASSOCIATIVE
-#define IST_WAYS 2
-#define IST_SETS IST_SIZE/IST_WAYS
-#define IST_HASH_DAVID
-#define IST_VICTIM_BUFFER
-#define IST_VICTIM_BUFFER_SIZE 32
+//#define IST_SET_ASSOCIATIVE
+//#define IST_WAYS 2
+//#define IST_SETS IST_SIZE/IST_WAYS
+//#define IST_HASH_DAVID
+//#define IST_VICTIM_BUFFER
+//define IST_VICTIM_BUFFER_SIZE 32
 
 
 
@@ -273,42 +292,41 @@ struct state_t
   bool ibda[CORE_WIDTH];
   reg_t instruction_pc[CORE_WIDTH];
   reg_t rdt[32];
-  #ifdef RDT_MARKED_BIT
   bool rdt_marked[32];
-  #endif
 
-  #ifdef RDT_BYPASSABLE
   reg_t rdt_bypass[CORE_WIDTH];
   reg_t rdt_marked_bypass[CORE_WIDTH];
-  #endif
 
-  #ifdef IST_VICTIM_BUFFER
   std::list<reg_t> * ist_victim_buffer;
-  #endif
+  reg_t vb_hits; 
 
-  #ifdef IST_FULLY_ASSOCIATIVE
-  std::list<reg_t> * ist_tag;
-  reg_t ist_evictions;
-  #else
-  #ifdef IST_SET_ASSOCIATIVE
-  std::list<reg_t> * ist_tag[IST_SETS];
-  reg_t ist_evictions[IST_SETS];
-  #else
-  std::unordered_map<reg_t, reg_t> * ist;
-  #endif
-  #endif
+  std::list<reg_t> * ist_tag_fa;
+  reg_t ist_evictions_fa;
+
+  std::list<reg_t> ** ist_tag_sa;
+  reg_t * ist_evictions_sa;
+
+  std::unordered_set<reg_t> * ist_tag_gm;
+
   reg_t a_cnt;
   reg_t b_cnt;
   reg_t load_cnt;
   reg_t store_cnt;
   reg_t agi_cnt;
   reg_t load_store_cnt;
+  reg_t false_positives;
+  reg_t false_negatives;
 
   void init_ibda();
   void update_ibda(insn_t insn, processor_t* p, reg_t insn_pc);
   bool in_ist(reg_t addr);
   void ist_add(reg_t addr);
+  bool in_vb(reg_t addr);
   void advance_core_idx();
+  void vb_add(reg_t addr);
+  reg_t ist_get_index(reg_t addr);
+  reg_t ibda_tag(reg_t addr);
+
 
 
   reg_t dpc;

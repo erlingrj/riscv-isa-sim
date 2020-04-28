@@ -13,6 +13,7 @@
 #include <string>
 #include <memory>
 #include "../VERSION"
+#include "processor.h"
 
 static void help(int exit_code = 1)
 {
@@ -134,6 +135,23 @@ int main(int argc, char** argv)
   };
   std::vector<int> hartids;
 
+
+ // IBDA simulation tuff
+
+ ist_fully_associative = false;
+ ist_set_associative = false;
+ ist_sz = 0;
+ ist_ways = 0;
+ ist_wp = 2;
+ tag_sz = 32;
+ ist_vb_sz = 8;
+ ist_vb = false;
+ ibda_tag_pc =  true;
+ ibda_compare_perfect = false;
+ ist_perfect = false;
+ trace_level = 0;
+
+
   auto const hartids_parser = [&](const char *s) {
     std::string const str(s);
     std::stringstream stream(str);
@@ -236,6 +254,25 @@ int main(int argc, char** argv)
   parser.option(0, "dm-no-halt-groups", 0,
       [&](const char* s){dm_config.support_haltgroups = false;});
   parser.option(0, "log-commits", 0, [&](const char* s){log_commits = true;});
+  
+  // IBDA simulation add-ons
+  parser.option(0, "ist_sz", 1, [&](const char* s){ist_sz = atoi(s);});
+  parser.option(0, "ist_ways", 1, [&](const char* s){ist_ways = atoi(s);});
+  //parser.option(0, "ist_cw", 1, [&](const char* s){ist_cw = atoi(s);});
+  parser.option(0, "ist_wp", 1, [&](const char* s){ist_wp = atoi(s);});
+  parser.option(0, "ibda_tag_pc", 0, [&](const char* s){ibda_tag_pc = true;});
+  parser.option(0, "ist_fully_associative", 0, [&](const char* s){ist_fully_associative = true;});
+  parser.option(0, "ist_set_associative", 0, [&](const char* s){ist_set_associative = true;});
+  parser.option(0, "ist_vb", 0, [&](const char* s){ist_vb = true;});
+  parser.option(0, "ist_vb_sz", 1, [&](const char* s){ist_vb_sz = atoi(s);});
+  parser.option(0, "ibda_compare_perfect", 0, [&](const char* s){ibda_compare_perfect = true;});
+  parser.option(0, "ist_perfect", 0, [&](const char* s){ist_perfect = true;});
+  parser.option(0, "ibda_tag_pc_bits", 1, [&](const char* s){ibda_tag_pc_bits = atoi(s);});
+  parser.option(0, "trace_level", 1, [&](const char* s){trace_level = atoi(s);});
+
+
+
+
 
   auto argv1 = parser.parse(argv);
   std::vector<std::string> htif_args(argv1, (const char*const*)argv + argc);
@@ -244,6 +281,13 @@ int main(int argc, char** argv)
 
   if (!*argv1)
     help();
+
+
+  printf("ist_sz=%lu\nist_ways=%lu\nist_wp=%lu\nibda_tag_pc=%d\nist_perfect=%d\nist_fully_associative=%d\nist_set_associative=%d\nist_vb=%d\nist_vb_sz=%lu\nibda_compare_perfect=%d\n",
+      ist_sz, ist_ways, ist_wp, ibda_tag_pc, ist_fully_associative, ist_set_associative, ist_vb, ist_vb_sz, ibda_compare_perfect);
+  ist_sets = ist_sz/ist_ways;  
+  assert(! (ist_set_associative && ist_fully_associative));
+  assert(! (ist_perfect &&  (ist_sz>0)));
 
   sim_t s(isa, varch, nprocs, halted, start_pc, mems, plugin_devices, htif_args,
       std::move(hartids), dm_config);
@@ -284,6 +328,5 @@ int main(int argc, char** argv)
 
   for (auto& plugin_device : plugin_devices)
     delete plugin_device.second;
-
   return return_code;
 }
