@@ -227,6 +227,7 @@ void state_t::reset(reg_t max_isa)
 
 
   if (ibda_p.ist_set_associative) {
+    printf("ist_reset check\n");
     ist_tag_sa = new std::list<reg_t>*[ibda_p.ist_sets];
     ist_evictions_sa = new reg_t[ibda_p.ist_sets];
     for (int i = 0; i <ibda_p.ist_sets; ++i) {
