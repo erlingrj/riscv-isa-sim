@@ -300,6 +300,7 @@ void state_t::init_ibda(){
           ist_victim_buffer->pop_back();
         }
         ist_victim_buffer->push_front(evict);
+        assert(!(ist_victim_buffer->size() > IST_VICTIM_BUFFER_SIZE));
       }
 
       // Add new entry to head of LRU queue
