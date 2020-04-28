@@ -299,12 +299,20 @@ reg_t state_t::ist_tag(reg_t addr) {
     }
 
     } else if (ibda_p.ist_set_associative) {
+        printf("in_ist 3\n");
+
       reg_t ist_index = ist_get_index(addr);
       std::list<reg_t>::iterator it = std::find (ist_tag_sa[ist_index]->begin(), ist_tag_sa[ist_index]->end(), addr); 
+        printf("in_ist 4\n");
+
       if (it != ist_tag_sa[ist_index]->end()) {
         // Found it
+          printf("in_ist 5\n");
+
         ist_tag_sa[ist_index]->erase(it);
         ist_tag_sa[ist_index]->push_front(addr);
+          printf("in_ist 6\n");
+
         if (ibda_p.ibda_compare_perfect) {
           std::unordered_set<reg_t>::iterator in_ist = ist_tag_gm->find(addr);
           if (in_ist == ist_tag_gm->end()) {
