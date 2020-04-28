@@ -51,8 +51,9 @@ processor_t::processor_t(const char* isa, const char* varch, simif_t* sim,
       disassembler->add_insn(disasm_insn);
   printf("Processor_t 3\n");
 
+    state.ibda_p = ibda;
+
   reset();
-  state.ibda_p = ibda;
 
   printf("Processor_t 4\n");
 
