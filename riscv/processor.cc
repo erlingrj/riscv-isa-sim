@@ -256,11 +256,57 @@ void state_t::init_ibda(){
       ist_evictions++;
     }
     ist_tag->push_front(addr);
-    assert(!ist_tag->size() > IST_SIZE);
+    assert(!(ist_tag->size() > IST_SIZE));
   }
 
 #else
   #ifdef IST_SET_ASSOCIATIVE
+
+  #ifdef IST_VICTIM_BUFFER
+    bool state_t::in_ist(reg_t addr){
+      int ist_index = IST_INDEX(addr);
+      std::list<reg_t>::iterator it = std::find (ist_tag[ist_index]->begin(), ist_tag[ist_index]->end(), addr); 
+      if (it != ist_tag[ist_index]->end()) {
+        // Found it
+        ist_tag[ist_index]->erase(it);
+        ist_tag[ist_index]->push_front(addr);
+        return true;
+      } else {
+        std::list<reg_t>::iterator it = std::find (ist_victim_buffer->begin(), ist_victim_buffer->end(), addr);
+        if( it != ist_victim_buffer->end()) {
+          // Found it in the victim buffer
+          ist_victim_buffer->erase(it);
+          ist_add(addr);
+          return true;
+        } else {
+          return false;
+        }
+      }
+    }
+
+    void state_t::ist_add(reg_t addr){
+      int ist_index = IST_INDEX(addr);
+      std::list<reg_t>::iterator it = std::find (ist_tag[ist_index]->begin(), ist_tag[ist_index]->end(), addr);
+      if (it != ist_tag[ist_index]->end()) {
+        // Found it
+        ist_tag[ist_index]->erase(it);
+      } else if (ist_tag[ist_index]->size() >= IST_WAYS) {
+        // Delete LRU
+        reg_t evict = ist_tag[ist_index]->back();
+//        fprintf(stderr, "ist adding " "0x%016" PRIx64 "evicting " "0x%016" PRIx64 "\n", addr, evict);
+        ist_tag[ist_index]->pop_back();
+
+        if (ist_victim_buffer->size() >= IST_VICTIM_BUFFER_SIZE) {
+          ist_victim_buffer->pop_back();
+        }
+        ist_victim_buffer->push_front(evict);
+      }
+
+      // Add new entry to head of LRU queue
+      ist_tag[ist_index]->push_front(addr);
+      assert(ist_tag[ist_index]->size() <= IST_WAYS);
+    };
+  #else
     bool state_t::in_ist(reg_t addr){
       int ist_index = IST_INDEX(addr);
       std::list<reg_t>::iterator it = std::find (ist_tag[ist_index]->begin(), ist_tag[ist_index]->end(), addr); 
@@ -293,6 +339,7 @@ void state_t::init_ibda(){
       ist_tag[ist_index]->push_front(addr);
       assert(ist_tag[ist_index]->size() <= IST_WAYS);
     };
+  #endif  
   #else
     bool state_t::in_ist(reg_t addr){
       std::unordered_map<reg_t, reg_t>::iterator in_ist = ist->find(addr);

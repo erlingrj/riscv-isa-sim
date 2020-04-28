@@ -221,6 +221,8 @@ class vectorUnit_t {
 #define IST_WAYS 2
 #define IST_SETS IST_SIZE/IST_WAYS
 #define IST_HASH_DAVID
+#define IST_VICTIM_BUFFER
+#define IST_VICTIM_BUFFER_SIZE 32
 
 
 
@@ -279,7 +281,11 @@ struct state_t
   reg_t rdt_bypass[CORE_WIDTH];
   reg_t rdt_marked_bypass[CORE_WIDTH];
   #endif
-  
+
+  #ifdef IST_VICTIM_BUFFER
+  std::list<reg_t> * ist_victim_buffer;
+  #endif
+
   #ifdef IST_FULLY_ASSOCIATIVE
   std::list<reg_t> * ist_tag;
   reg_t ist_evictions;
