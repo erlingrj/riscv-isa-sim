@@ -16,20 +16,6 @@
 #include "ibda.h"
 
 // IBDA simulation tuff
-extern bool ist_fully_associative;
-extern bool ist_set_associative;
-extern reg_t ist_sz;
-extern reg_t ist_ways;
-extern reg_t ist_wp;
-extern reg_t tag_sz;
-extern reg_t ist_vb_sz;
-extern int ist_sets;
-extern reg_t ibda_tag_pc_bits;
-extern bool ist_vb;
-extern bool ibda_tag_pc;
-extern bool ibda_compare_perfect;
-extern bool ist_perfect;
-extern int trace_level;
 
 
 
@@ -280,6 +266,7 @@ struct state_t
   reg_t satp;
   reg_t scause;
 
+
   //ibda stuff - state reset zeros everything
   size_t core_idx; //Count up instructions to trigger ibda when we have filled up the width
   size_t rd[CORE_WIDTH];
@@ -308,6 +295,8 @@ struct state_t
 
   std::unordered_set<reg_t> * ist_tag_gm;
 
+
+  struct ibda_params ibda_p;
   reg_t a_cnt;
   reg_t b_cnt;
   reg_t load_cnt;
@@ -326,7 +315,7 @@ struct state_t
   void vb_add(reg_t addr);
   reg_t ist_get_index(reg_t addr);
   reg_t ibda_tag(reg_t addr);
-
+  void debug_print(const char *fmt, ...);
 
 
   reg_t dpc;
@@ -381,7 +370,7 @@ static int cto(reg_t val)
 class processor_t : public abstract_device_t
 {
 public:
-  processor_t(const char* isa, const char* varch, simif_t* sim, uint32_t id,
+  processor_t(const char* isa, const char* varch, simif_t* sim, uint32_t id, struct ibda_params ibda,
               bool halt_on_reset=false);
   ~processor_t();
 

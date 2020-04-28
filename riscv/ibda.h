@@ -1,6 +1,7 @@
 #ifndef IBDA_H
 #define IBDA_H
-bool ist_fully_associative;
+  struct ibda_params {
+    bool ist_fully_associative;
 bool ist_set_associative;
 reg_t ist_sz;
 reg_t ist_ways;
@@ -14,5 +15,6 @@ bool ibda_tag_pc;
 bool ibda_compare_perfect;
 bool ist_perfect;
 int trace_level;
+  };
 
 #endif
