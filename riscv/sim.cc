@@ -37,6 +37,7 @@ sim_t::sim_t(const char* isa, const char* varch, size_t nprocs, bool halted,
     log_commits_enabled(false), dtb_enabled(true),
     remote_bitbang(NULL), debug_module(this, dm_config)
 {
+  printf("simt_t 1\n");
   signal(SIGINT, &handle_signal);
 
   for (auto& x : mems)
@@ -63,6 +64,7 @@ sim_t::sim_t(const char* isa, const char* varch, size_t nprocs, bool halted,
       procs[i] = new processor_t(isa, varch, this, hartids[i],ibda, halted);
     }
   }
+  printf("sim_t 2\n");
 
   clint.reset(new clint_t(procs));
   bus.add_device(CLINT_BASE, clint.get());
