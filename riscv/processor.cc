@@ -226,7 +226,7 @@ void state_t::reset(reg_t max_isa)
     ist_evictions_fa = 0;
   }
 
-
+  printf("reset what is set_associative now? %d\n", ibda_p.ist_set_associative);
   if (ibda_p.ist_set_associative) {
     printf("ist_reset check\n");
     ist_tag_sa = new std::list<reg_t>*[ibda_p.ist_sets];
