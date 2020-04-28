@@ -303,6 +303,7 @@ reg_t state_t::ist_tag(reg_t addr) {
 
       reg_t ist_index = ist_get_index(addr);
         printf("in_ist 21\n");
+          printf("%d\n", ist_index);
 
       std::list<reg_t>::iterator it = std::find (ist_tag_sa[ist_index]->begin(), ist_tag_sa[ist_index]->end(), addr); 
         printf("in_ist 4\n");
