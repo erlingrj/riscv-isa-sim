@@ -36,19 +36,26 @@ processor_t::processor_t(const char* isa, const char* varch, simif_t* sim,
   : debug(false), halt_request(false), sim(sim), ext(NULL), id(id),
   halt_on_reset(halt_on_reset), last_pc(1), executions(1)
 {
+  printf("Processor_t 1\n");
   VU.p = this;
   parse_isa_string(isa);
   parse_varch_string(varch);
   register_base_instructions();
   mmu = new mmu_t(sim, this);
+  printf("Processor_t 2\n");
+
 
   disassembler = new disassembler_t(max_xlen);
   if (ext)
     for (auto disasm_insn : ext->get_disasms())
       disassembler->add_insn(disasm_insn);
+  printf("Processor_t 3\n");
 
   reset();
   state.ibda_p = ibda;
+
+  printf("Processor_t 4\n");
+
 }
 
 processor_t::~processor_t()

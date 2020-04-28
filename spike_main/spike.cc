@@ -290,7 +290,13 @@ int main(int argc, char** argv)
 
   printf("ist_sz=%lu\nist_ways=%lu\nist_wp=%lu\nibda_tag_pc=%d\nist_perfect=%d\nist_fully_associative=%d\nist_set_associative=%d\nist_vb=%d\nist_vb_sz=%lu\nibda_compare_perfect=%d\n",
       ibda.ist_sz, ibda.ist_ways, ibda.ist_wp, ibda.ibda_tag_pc,ibda.ist_perfect, ibda.ist_fully_associative, ibda.ist_set_associative, ibda.ist_vb, ibda.ist_vb_sz, ibda.ibda_compare_perfect);
-  ibda.ist_sets = ibda.ist_sz/ibda.ist_ways;  
+  if (ibda.ist_set_associative) {
+    assert(ibda.ist_ways > 0);
+    assert(ibda.ist_sz > 0);
+    ibda.ist_sets = ibda.ist_sz/ibda.ist_ways;  
+  }
+  
+  assert(ibda.ist_wp>0);
   assert(! (ibda.ist_set_associative && ibda.ist_fully_associative));
   assert(! (ibda.ist_perfect &&  (ibda.ist_sz>0)));
 
