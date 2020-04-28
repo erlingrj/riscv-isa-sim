@@ -203,6 +203,7 @@ void processor_t::parse_isa_string(const char* str)
 
 void state_t::reset(reg_t max_isa)
 {
+  printf("Yeh reset\n");
   memset(this, 0, sizeof(*this));
   misa = max_isa;
   prv = PRV_M;
