@@ -36,26 +36,22 @@ processor_t::processor_t(const char* isa, const char* varch, simif_t* sim,
   : debug(false), halt_request(false), sim(sim), ext(NULL), id(id),
   halt_on_reset(halt_on_reset), last_pc(1), executions(1)
 {
-  printf("Processor_t 1\n");
   VU.p = this;
   parse_isa_string(isa);
   parse_varch_string(varch);
   register_base_instructions();
   mmu = new mmu_t(sim, this);
-  printf("Processor_t 2\n");
 
 
   disassembler = new disassembler_t(max_xlen);
   if (ext)
     for (auto disasm_insn : ext->get_disasms())
       disassembler->add_insn(disasm_insn);
-  printf("Processor_t 3\n");
 
     state.ibda_p = ibda;
 
   reset();
 
-  printf("Processor_t 4\n");
 
 }
 
@@ -204,7 +200,6 @@ void processor_t::parse_isa_string(const char* str)
 
 void state_t::reset(reg_t max_isa)
 {
-  printf("Yeh reset\n");
   memset(this, 0, sizeof(*this));
   misa = max_isa;
   prv = PRV_M;
@@ -227,9 +222,7 @@ void state_t::reset(reg_t max_isa)
     ist_evictions_fa = 0;
   }
 
-  printf("reset what is set_associative now? %d\n", ibda_p.ist_set_associative);
   if (ibda_p.ist_set_associative) {
-    printf("ist_reset check\n");
     ist_tag_sa = new std::list<reg_t>*[ibda_p.ist_sets];
     ist_evictions_sa = new reg_t[ibda_p.ist_sets];
     for (int i = 0; i <ibda_p.ist_sets; ++i) {
@@ -281,7 +274,6 @@ reg_t state_t::ist_tag(reg_t addr) {
   return addr;
 }
   bool state_t::in_ist(reg_t addr){
-  printf("in_ist 1\n");
     if (ibda_p.ist_fully_associative) {
       std::list<reg_t>::iterator it = std::find(ist_tag_fa->begin(), ist_tag_fa->end(),addr);
       if (it != ist_tag_fa->end()) {
@@ -305,22 +297,14 @@ reg_t state_t::ist_tag(reg_t addr) {
     }
 
     } else if (ibda_p.ist_set_associative) {
-        printf("in_ist 3\n");
-
       reg_t ist_index = ist_get_index(addr);
-        printf("in_ist 21\n");
-          printf("%d\n", ist_index);
-        printf("inst_tag_sa size = %d\n", (*ist_tag_sa)->size());
       std::list<reg_t>::iterator it = std::find (ist_tag_sa[ist_index]->begin(), ist_tag_sa[ist_index]->end(), addr); 
-        printf("in_ist 4\n");
 
       if (it != ist_tag_sa[ist_index]->end()) {
         // Found it
-          printf("in_ist 5\n");
 
         ist_tag_sa[ist_index]->erase(it);
         ist_tag_sa[ist_index]->push_front(addr);
-          printf("in_ist 6\n");
 
         if (ibda_p.ibda_compare_perfect) {
           std::unordered_set<reg_t>::iterator in_ist = ist_tag_gm->find(addr);
@@ -328,7 +312,6 @@ reg_t state_t::ist_tag(reg_t addr) {
             false_positives += 1;
           }
         }
-          printf("in_ist 2\n");
         return true;
       } else {
         
@@ -340,8 +323,6 @@ reg_t state_t::ist_tag(reg_t addr) {
                 false_positives += 1;
               }
             }
-              printf("in_ist 2\n");
-
             return true;
           }          
         }
@@ -352,8 +333,6 @@ reg_t state_t::ist_tag(reg_t addr) {
           false_negatives += 1;
         }
       }
-        printf("in_ist2\n");
-
       return false;
     }
 
@@ -365,14 +344,10 @@ reg_t state_t::ist_tag(reg_t addr) {
         return false;
       } 
     }
-  printf("in_ist 2\n");
-
   }
 
 
   void state_t::ist_add(reg_t addr){
-  printf("ist_add 1\n");
-
     if (ibda_p.ist_perfect) {
       ist_tag_gm->insert({addr, 0});
     } else if (ibda_p.ist_fully_associative) {
