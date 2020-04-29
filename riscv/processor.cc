@@ -24,9 +24,10 @@
 
 void state_t::debug_print(const char *fmt, ...) {
     if (ibda_p.trace_level > 0) {
+      printf("Gonna print");
       va_list args;
       va_start(args, fmt);
-      printf(fmt, args);
+      fprintf(stderr,fmt, args);
       va_end(args);
     }
 }
