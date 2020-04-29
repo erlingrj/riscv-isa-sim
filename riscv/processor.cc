@@ -48,6 +48,9 @@ processor_t::processor_t(const char* isa, const char* varch, simif_t* sim,
   mmu = new mmu_t(sim, this);
 
 
+  printf("trace_level=%d\nist_sz=%lu\nist_ways=%lu\nist_wp=%lu\nibda_tag_pc=%d\nist_perfect=%d\nist_fully_associative=%d\nist_set_associative=%d\nist_vb=%d\nist_vb_sz=%lu\nibda_compare_perfect=%d\n",
+      ibda.trace_level, ibda.ist_sz, ibda.ist_ways, ibda.ist_wp, ibda.ibda_tag_pc,ibda.ist_perfect, ibda.ist_fully_associative, ibda.ist_set_associative, ibda.ist_vb, ibda.ist_vb_sz, ibda.ibda_compare_perfect);
+      
   disassembler = new disassembler_t(max_xlen);
   if (ext)
     for (auto disasm_insn : ext->get_disasms())
