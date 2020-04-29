@@ -262,8 +262,8 @@ void state_t::init_ibda(){
 
 reg_t state_t::ist_get_index(reg_t addr) {
   reg_t res =  ((addr ^ (addr/ibda_p.ist_sets/2) ) >> 1) & (ibda_p.ist_sets/2-1);
-  printf("%d:%d\n",addr, res);
-  assert(res > 0 && res < ibda_p.ist_sets);
+  printf("%lu:%lu\n",addr, res);
+  assert(res >= 0UL && res < ibda_p.ist_sets);
   return res;
 }
 
@@ -374,7 +374,9 @@ reg_t state_t::ist_tag(reg_t addr) {
       } else if (ist_tag_sa[ist_index]->size() >= ibda_p.ist_sz) {
         // Delete LRU
         reg_t evict = ist_tag_sa[ist_index]->back();
-        debug_print("ist adding " "0x%016" PRIx64 " evicting " "0x%016" PRIx64 "\n", addr, evict);
+        if (ibda_p.trace_level > 0) {
+          fprintf(stderr, "ist adding " "0x%016" PRIx64 " evicting " "0x%016" PRIx64 "\n", addr, evict);
+        }
         ist_tag_sa[ist_index]->pop_back();
 
         if (ibda_p.ist_vb) {
@@ -418,8 +420,11 @@ reg_t state_t::ist_tag(reg_t addr) {
     ibda[core_idx] = ((load[core_idx] || store[core_idx] ) && !amo[core_idx]) || agi[core_idx];
     instruction_pc[core_idx] = insn_pc;
     uint64_t bits = insn.bits() & ((1ULL << (8 * insn_length(insn.bits()))) - 1);
-    debug_print("0x%016" PRIx64 " (0x%08" PRIx64 ") core_idx:%d ibda:%d %s\n",
-                       insn_pc, bits, core_idx, ibda[core_idx],p->disassembler->disassemble(insn).c_str());
+    if (ibda_p.trace_level > 0) {
+      fprintf(stderr, "0x%016" PRIx64 " (0x%08" PRIx64 ") core_idx:%d ibda:%d %s\n",
+                       insn_pc, bits, core_idx, ibda[core_idx],p->disassembler->disassemble(insn).c_str());  
+    }
+    
    //fprintf(stderr, "insn_pc: 0x%016" PRIx64 " rd: %d rs1: %d rs2: %d\n", insn_pc, rd, rs1, rs2);
     
     if(core_idx == (CORE_WIDTH - 1)) {
@@ -443,7 +448,9 @@ reg_t state_t::ist_tag(reg_t addr) {
             
             if(!is_marked) {
               rdt_marked[rs1[i]] = true;
-              debug_print("ibda added rs1 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs1[i], pc, instruction_pc[i]);
+              if (ibda_p.trace_level > 0) {
+                fprintf(stderr, "ibda added rs1 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs1[i], pc, instruction_pc[i]);
+              }
               ist_add(pc);
               // avoid unnecessary rdt additions
               mark_cnt++;
@@ -469,8 +476,10 @@ reg_t state_t::ist_tag(reg_t addr) {
 
             if(!is_marked) {
               rdt_marked[rs2[i]] = true;
-
-              debug_print( "ibda added rs1 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs2[i], pc, instruction_pc[i]);
+              if (ibda_p.trace_level > 0) {
+                fprintf(stderr, "ibda added rs1 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs2[i], pc, instruction_pc[i]);
+              
+              }
               ist_add(pc);
               // avoid unnecessary rdt additions
               mark_cnt++;
