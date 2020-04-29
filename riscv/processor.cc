@@ -598,6 +598,17 @@ void processor_t::set_log_commits(bool value)
 
 void processor_t::reset(struct ibda_params ibda)
 {
+  if (ibda.ist_set_associative) {
+    assert(ibda.ist_ways > 0);
+    assert(ibda.ist_sz > 0);
+  }
+  
+  assert(ibda.ist_set_associative || ibda.ist_fully_associative || ibda.ist_perfect);
+
+  assert(ibda.ist_wp>0);
+  assert(! (ibda.ist_set_associative && ibda.ist_fully_associative));
+  assert(! (ibda.ist_perfect &&  (ibda.ist_sz>0)));
+
   state.reset(max_isa, ibda);
   state.dcsr.halt = halt_on_reset;
   halt_on_reset = false;
