@@ -48,24 +48,13 @@ processor_t::processor_t(const char* isa, const char* varch, simif_t* sim,
   mmu = new mmu_t(sim, this);
 
 
-  printf("trace_level=%d\nist_sz=%lu\nist_ways=%lu\nist_wp=%lu\nibda_tag_pc=%d\nist_perfect=%d\nist_fully_associative=%d\nist_set_associative=%d\nist_vb=%d\nist_vb_sz=%lu\nibda_compare_perfect=%d\n",
-      ibda.trace_level, ibda.ist_sz, ibda.ist_ways, ibda.ist_wp, ibda.ibda_tag_pc,ibda.ist_perfect, ibda.ist_fully_associative, ibda.ist_set_associative, ibda.ist_vb, ibda.ist_vb_sz, ibda.ibda_compare_perfect);
-
   disassembler = new disassembler_t(max_xlen);
   if (ext)
     for (auto disasm_insn : ext->get_disasms())
       disassembler->add_insn(disasm_insn);
 
   
-  
-  state.ibda_p = ibda;
-
-printf("trace_level=%d\nist_sz=%lu\nist_ways=%lu\nist_wp=%lu\nibda_tag_pc=%d\nist_perfect=%d\nist_fully_associative=%d\nist_set_associative=%d\nist_vb=%d\nist_vb_sz=%lu\nibda_compare_perfect=%d\n",
-      state.ibda_p.trace_level, state.ibda_p.ist_sz, state.ibda_p.ist_ways, state.ibda_p.ist_wp, state.ibda_p.ibda_tag_pc,state.ibda_p.ist_perfect, state.ibda_p.ist_fully_associative, state.ibda_p.ist_set_associative, state.ibda_p.ist_vb, state.ibda_p.ist_vb_sz, state.ibda_p.ibda_compare_perfect);
-
-  reset();
-
-
+  reset(ibda);
 }
 
 processor_t::~processor_t()
@@ -211,9 +200,10 @@ void processor_t::parse_isa_string(const char* str)
   max_isa = state.misa;
 }
 
-void state_t::reset(reg_t max_isa)
+void state_t::reset(reg_t max_isa, struct ibda_params ibda)
 {
   memset(this, 0, sizeof(*this));
+  ibda_p = ibda;
   misa = max_isa;
   prv = PRV_M;
   pc = DEFAULT_RSTVEC;
@@ -606,9 +596,9 @@ void processor_t::set_log_commits(bool value)
 #endif
 }
 
-void processor_t::reset()
+void processor_t::reset(struct ibda_params ibda)
 {
-  state.reset(max_isa);
+  state.reset(max_isa, ibda);
   state.dcsr.halt = halt_on_reset;
   halt_on_reset = false;
   set_csr(CSR_MSTATUS, state.mstatus);

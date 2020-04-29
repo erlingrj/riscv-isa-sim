@@ -235,7 +235,7 @@ class vectorUnit_t {
 // architectural state of a RISC-V hart
 struct state_t
 {
-  void reset(reg_t max_isa);
+  void reset(reg_t max_isa, struct ibda_params ibda);
 
   static const int num_triggers = 4;
 
@@ -379,7 +379,7 @@ public:
   void set_histogram(bool value);
   void set_log_commits(bool value);
   bool get_log_commits() { return log_commits_enabled; }
-  void reset();
+  void reset(struct ibda_params ibda);
   void step(size_t n); // run for n cycles
   void set_csr(int which, reg_t val);
   reg_t get_csr(int which);
