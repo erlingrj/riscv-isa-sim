@@ -23,9 +23,7 @@
 
 
 void state_t::debug_print(const char *fmt, ...) {
-    printf("What is tracelevel? =%i\n", ibda_p.trace_level);
     if (ibda_p.trace_level > 0) {
-      printf("Gonna print");
       va_list args;
       va_start(args, fmt);
       fprintf(stderr,fmt, args);
