@@ -22,9 +22,12 @@
 #define STATE state
 
 
+
+//printf("trace_level=%d\nist_sz=%lu\nist_ways=%lu\nist_wp=%lu\nibda_tag_pc=%d\nist_perfect=%d\nist_fully_associative=%d\nist_set_associative=%d\nist_vb=%d\nist_vb_sz=%lu\nibda_compare_perfect=%d\n",
+//      ibda_p.trace_level, ibda_p.ist_sz, ibda_p.ist_ways, ibda_p.ist_wp, ibda_p.ibda_tag_pc,ibda_p.ist_perfect, ibda_p.ist_fully_associative, ibda_p.ist_set_associative, ibda_p.ist_vb, ibda_p.ist_vb_sz, ibda_p.ibda_compare_perfect);
+
 void state_t::debug_print(const char *fmt, ...) {
-  printf("trace_level=%d\nist_sz=%lu\nist_ways=%lu\nist_wp=%lu\nibda_tag_pc=%d\nist_perfect=%d\nist_fully_associative=%d\nist_set_associative=%d\nist_vb=%d\nist_vb_sz=%lu\nibda_compare_perfect=%d\n",
-      ibda_p.trace_level, ibda_p.ist_sz, ibda_p.ist_ways, ibda_p.ist_wp, ibda_p.ibda_tag_pc,ibda_p.ist_perfect, ibda_p.ist_fully_associative, ibda_p.ist_set_associative, ibda_p.ist_vb, ibda_p.ist_vb_sz, ibda_p.ibda_compare_perfect);
+  
     if (ibda_p.trace_level > 0) {
       va_list args;
       va_start(args, fmt);
@@ -50,8 +53,9 @@ processor_t::processor_t(const char* isa, const char* varch, simif_t* sim,
     for (auto disasm_insn : ext->get_disasms())
       disassembler->add_insn(disasm_insn);
 
-    state.ibda_p = ibda;
-
+  
+  
+  state.ibda_p = ibda;
   reset();
 
 
