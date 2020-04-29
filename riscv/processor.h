@@ -315,7 +315,7 @@ struct state_t
   void advance_core_idx();
   void vb_add(reg_t addr);
   reg_t ist_get_index(reg_t addr);
-  reg_t ist_tag(reg_t addr);
+  reg_t ist_get_tag(reg_t addr, reg_t bits);
   void debug_print(const char *fmt, ...);
 
 

@@ -261,18 +261,32 @@ void state_t::init_ibda(){
 //#define IST_INDEX(x) (((x^(x/(IST_SIZE/2)))>>1)&(IST_SIZE/2-1))
 
 reg_t state_t::ist_get_index(reg_t addr) {
-  reg_t res =  ((addr ^ (addr/ibda_p.ist_sets) ) >> 1UL) & (ibda_p.ist_sets-1UL);
-  assert(res >= 0UL && res < ibda_p.ist_sets);
+  if (ibda_p.ibda_ist_hash_xor_david) {
+    reg_t res =  (((addr >> 1) ^ (addr >> ( (int) log2(ibda_p.ist_sets) + 1 ))) & (ibda_p.ist_sets-1));
+    assert(res >= 0UL && res < ibda_p.ist_sets);
+    return res;
   return res;
+  } else {
+    assert(false);
+  }
+  
 }
 
-reg_t state_t::ist_tag(reg_t addr) {
-  if (ibda_p.ibda_tag_pc) {
-    return (addr >> (32 - ibda_p.ibda_tag_pc_bits));
+reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
+
+  if (ibda_p.ibda_ist_hash_xor_david) {
+  uint64_t set_mask = ~(ibda_p.ist_sets - 1);
+  uint64_t tag_mask = (1UL << (bits + (uint64_t) log2(ibda_p.ist_sets))) - 1;
+  uint64_t masked_pc = (addr >> 1);
+  return (masked_pc & set_mask & tag_mask) >> ( (int) log2(ibda_p.ist_sets) );
   }
-  return addr;
+
+  assert(false);
+  
 }
   bool state_t::in_ist(reg_t addr){
+
+ 
     if (ibda_p.ist_fully_associative) {
       std::list<reg_t>::iterator it = std::find(ist_tag_fa->begin(), ist_tag_fa->end(),addr);
       if (it != ist_tag_fa->end()) {
@@ -296,14 +310,15 @@ reg_t state_t::ist_tag(reg_t addr) {
     }
 
     } else if (ibda_p.ist_set_associative) {
-      reg_t ist_index = ist_get_index(addr);
-      std::list<reg_t>::iterator it = std::find (ist_tag_sa[ist_index]->begin(), ist_tag_sa[ist_index]->end(), addr); 
+      reg_t tag = ist_get_tag(addr, ibda_p.ibda_tag_bits);
+      reg_t ist_index = ist_get_index(tag);
+      std::list<reg_t>::iterator it = std::find (ist_tag_sa[ist_index]->begin(), ist_tag_sa[ist_index]->end(),tag); 
 
       if (it != ist_tag_sa[ist_index]->end()) {
         // Found it
 
         ist_tag_sa[ist_index]->erase(it);
-        ist_tag_sa[ist_index]->push_front(addr);
+        ist_tag_sa[ist_index]->push_front(tag);
 
         if (ibda_p.ibda_compare_perfect) {
           std::unordered_set<reg_t>::iterator in_ist = ist_tag_gm->find(addr);
@@ -315,7 +330,7 @@ reg_t state_t::ist_tag(reg_t addr) {
       } else {
         
         if (ibda_p.ist_vb) {
-          if (in_vb(addr)) {
+          if (in_vb(tag)) {
             if (ibda_p.ibda_compare_perfect) {
               std::unordered_set<reg_t>::iterator in_ist = ist_tag_gm->find(addr);
               if (in_ist == ist_tag_gm->end()) {
@@ -364,9 +379,9 @@ reg_t state_t::ist_tag(reg_t addr) {
         ist_tag_gm->insert({addr, 0});
       }
     } else if (ibda_p.ist_set_associative) {
-
+      reg_t tag = ist_get_tag(addr, ibda_p.ibda_tag_bits);
       reg_t ist_index = ist_get_index(addr);
-      std::list<reg_t>::iterator it = std::find (ist_tag_sa[ist_index]->begin(), ist_tag_sa[ist_index]->end(), addr);
+      std::list<reg_t>::iterator it = std::find (ist_tag_sa[ist_index]->begin(), ist_tag_sa[ist_index]->end(), tag);
       if (it != ist_tag_sa[ist_index]->end()) {
         // Found it
         ist_tag_sa[ist_index]->erase(it);
@@ -384,7 +399,7 @@ reg_t state_t::ist_tag(reg_t addr) {
       }
 
       // Add new entry to head of LRU queue
-      ist_tag_sa[ist_index]->push_front(addr);
+      ist_tag_sa[ist_index]->push_front(tag);
       assert(ist_tag_sa[ist_index]->size() <= ibda_p.ist_ways);
       
       if (ibda_p.ibda_compare_perfect) { 
@@ -420,7 +435,7 @@ reg_t state_t::ist_tag(reg_t addr) {
     instruction_pc[core_idx] = insn_pc;
     uint64_t bits = insn.bits() & ((1ULL << (8 * insn_length(insn.bits()))) - 1);
     if (ibda_p.trace_level > 0) {
-      fprintf(stderr, "0x%016" PRIx64 " (0x%08" PRIx64 ") core_idx:%d ibda:%d %s\n",
+      fprintf(stderr, "0x%016" PRIx64 " (0xcd%08" PRIx64 ") core_idx:%d ibda:%d %s\n",
                        insn_pc, bits, core_idx, ibda[core_idx],p->disassembler->disassemble(insn).c_str());  
     }
     

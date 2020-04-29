@@ -149,10 +149,10 @@ int main(int argc, char** argv)
   ibda.tag_sz= 0;
   ibda.ist_vb_sz =0;
   ibda.ist_sets=0;
-  ibda.ibda_tag_pc_bits =0;
   ibda.ist_vb=false;
-  ibda.ibda_tag_pc=false;
   ibda.ibda_compare_perfect = false;
+  ibda.ibda_ist_hash_xor_david = false;
+  ibda.ibda_tag_bits = 32;
   ibda.ist_perfect = false;
   ibda.trace_level = 0;
   
@@ -265,14 +265,14 @@ int main(int argc, char** argv)
   parser.option(0, "ist_ways", 1, [&](const char* s){ibda.ist_ways = atoi(s);});
   //parser.option(0, "ist_cw", 1, [&](const char* s){ist_cw = atoi(s);});
   parser.option(0, "ist_wp", 1, [&](const char* s){ibda.ist_wp = atoi(s);});
-  parser.option(0, "ibda_tag_pc", 0, [&](const char* s){ibda.ibda_tag_pc = true;});
+  parser.option(0, "ibda_ist_hash_xor_david", 0, [&](const char* s){ibda.ibda_ist_hash_xor_david = true;});
   parser.option(0, "ist_fully_associative", 0, [&](const char* s){ibda.ist_fully_associative = true;});
   parser.option(0, "ist_set_associative", 0, [&](const char* s){ibda.ist_set_associative = true;});
   parser.option(0, "ist_vb", 0, [&](const char* s){ibda.ist_vb = true;});
   parser.option(0, "ist_vb_sz", 1, [&](const char* s){ibda.ist_vb_sz = atoi(s);});
   parser.option(0, "ibda_compare_perfect", 0, [&](const char* s){ibda.ibda_compare_perfect = true;});
   parser.option(0, "ist_perfect", 0, [&](const char* s){ibda.ist_perfect = true;});
-  parser.option(0, "ibda_tag_pc_bits", 1, [&](const char* s){ibda.ibda_tag_pc_bits = atoi(s);});
+  parser.option(0, "ibda_tag_bits", 1, [&](const char* s){ibda.ibda_tag_bits = atoi(s);});
   parser.option(0, "trace_level", 1, [&](const char* s){ibda.trace_level = atoi(s);});
 
 
@@ -288,8 +288,8 @@ int main(int argc, char** argv)
     help();
 
 
-  printf("trace_level=%d\nist_sz=%lu\nist_ways=%lu\nist_wp=%lu\nibda_tag_pc=%d\nist_perfect=%d\nist_fully_associative=%d\nist_set_associative=%d\nist_vb=%d\nist_vb_sz=%lu\nibda_compare_perfect=%d\n",
-      ibda.trace_level, ibda.ist_sz, ibda.ist_ways, ibda.ist_wp, ibda.ibda_tag_pc,ibda.ist_perfect, ibda.ist_fully_associative, ibda.ist_set_associative, ibda.ist_vb, ibda.ist_vb_sz, ibda.ibda_compare_perfect);
+  printf("trace_level=%d\nist_sz=%lu\nist_ways=%lu\nist_wp=%lu\nibda_ist_hash_xor_david=%d\nibda_tag_bits=%d\nist_perfect=%d\nist_fully_associative=%d\nist_set_associative=%d\nist_vb=%d\nist_vb_sz=%lu\nibda_compare_perfect=%d\n",
+      ibda.trace_level, ibda.ist_sz, ibda.ist_ways, ibda.ist_wp, ibda.ibda_ist_hash_xor_david, ibda.ibda_tag_bits, ibda.ist_perfect, ibda.ist_fully_associative, ibda.ist_set_associative, ibda.ist_vb, ibda.ist_vb_sz, ibda.ibda_compare_perfect);
   if (ibda.ist_set_associative) {
     assert(ibda.ist_ways > 0);
     assert(ibda.ist_sz > 0);
