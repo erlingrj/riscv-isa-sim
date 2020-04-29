@@ -241,7 +241,6 @@ void state_t::reset(reg_t max_isa)
 }
 
 void state_t::init_ibda(){
-  printf("init_ibda 1\n");
     rd[core_idx] = 0;
     rs1[core_idx] = 0;
     rs2[core_idx] = 0;
@@ -253,8 +252,6 @@ void state_t::init_ibda(){
     amo[core_idx] = false;
     rdt_bypass[core_idx] = 0;
     rdt_marked_bypass[core_idx] = false;
-  printf("init_ibda 2\n");
-
   }
 
 
