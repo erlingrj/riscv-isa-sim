@@ -26,7 +26,7 @@ void state_t::debug_print(const char *fmt, ...) {
     if (ibda_p.trace_level > 0) {
       va_list args;
       va_start(args, fmt);
-      vprintf(fmt, args);
+      printf(fmt, args);
       va_end(args);
     }
 }
