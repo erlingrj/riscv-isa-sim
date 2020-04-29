@@ -261,7 +261,7 @@ void state_t::init_ibda(){
 //#define IST_INDEX(x) (((x^(x/(IST_SIZE/2)))>>1)&(IST_SIZE/2-1))
 
 reg_t state_t::ist_get_index(reg_t addr) {
-  reg_t res =  ((addr ^ (addr/ibda_p.ist_sets/2) ) >> 1) & (ibda_p.ist_sets/2-1);
+  reg_t res =  ((addr ^ (addr/ibda_p.ist_sets/2UL) ) >> 1UL) & (ibda_p.ist_sets/2UL-1UL);
   assert(res >= 0UL && res < ibda_p.ist_sets);
   return res;
 }
@@ -364,13 +364,13 @@ reg_t state_t::ist_tag(reg_t addr) {
         ist_tag_gm->insert({addr, 0});
       }
     } else if (ibda_p.ist_set_associative) {
-      
+
       reg_t ist_index = ist_get_index(addr);
       std::list<reg_t>::iterator it = std::find (ist_tag_sa[ist_index]->begin(), ist_tag_sa[ist_index]->end(), addr);
       if (it != ist_tag_sa[ist_index]->end()) {
         // Found it
         ist_tag_sa[ist_index]->erase(it);
-      } else if (ist_tag_sa[ist_index]->size() >= ibda_p.ist_sz) {
+      } else if (ist_tag_sa[ist_index]->size() >= ibda_p.ist_ways) {
         // Delete LRU
         reg_t evict = ist_tag_sa[ist_index]->back();
         if (ibda_p.trace_level > 0) {
@@ -385,7 +385,7 @@ reg_t state_t::ist_tag(reg_t addr) {
 
       // Add new entry to head of LRU queue
       ist_tag_sa[ist_index]->push_front(addr);
-      assert(ist_tag_sa[ist_index]->size() <= ibda_p.ist_sz);
+      assert(ist_tag_sa[ist_index]->size() <= ibda_p.ist_ways);
       
       if (ibda_p.ibda_compare_perfect) { 
         ist_tag_gm->insert({addr, 0});
