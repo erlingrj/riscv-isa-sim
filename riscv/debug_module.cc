@@ -815,7 +815,7 @@ bool debug_module_t::dmi_write(unsigned address, uint32_t value)
           if (dmcontrol.ndmreset) {
             for (size_t i = 0; i < sim->nprocs(); i++) {
               processor_t *proc = sim->get_core(i);
-              struct ibda_params _ibda
+              struct ibda_params _ibda;
               proc->reset(_ibda);
             }
           }
