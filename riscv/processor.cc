@@ -251,6 +251,9 @@ void state_t::reset(reg_t max_isa)
   false_positives = 0;
   core_idx = 0;
 
+  printf("trace_level=%d\nist_sz=%lu\nist_ways=%lu\nist_wp=%lu\nibda_tag_pc=%d\nist_perfect=%d\nist_fully_associative=%d\nist_set_associative=%d\nist_vb=%d\nist_vb_sz=%lu\nibda_compare_perfect=%d\n",
+      ibda_p.trace_level, ibda_p.ist_sz, ibda_p.ist_ways, ibda_p.ist_wp, ibda_p.ibda_tag_pc,ibda_p.ist_perfect, ibda_p.ist_fully_associative, ibda_p.ist_set_associative, ibda_p.ist_vb, ibda_p.ist_vb_sz, ibda_p.ibda_compare_perfect);
+
 }
 
 void state_t::init_ibda(){
