@@ -472,7 +472,7 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
                 fprintf(stdout, "ibda added rs1 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs1[i], pc, instruction_pc[i]);
               }
               if (ibda_p.dump_load_slice_instruction_trace) {
-               fprintf(stderr, "pc 0x%016" PRIx64 " inst 0xcd%08" PRIx64 "\n", pc, insn);
+               fprintf(stderr, "pc " "0x%016" PRIx64 " inst %x\n", pc, insn);
               }
 
               ist_add(pc);
