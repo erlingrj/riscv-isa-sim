@@ -461,10 +461,6 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
             reg_t pc = rdt[rs1[i]];
             reg_t insn = rdt_insn[rs1[i]];
 
-            if (ibda_p.dump_load_slice_instruction_trace) {
-               fprintf(stderr, "2pc " "0x%016" PRIx64 " inst %x\n", pc, insn);
-              }
-
             // If we have a bypassable queue. We have to check previous
             // candidates
             for(size_t j = 0; j<i; ++j) {
