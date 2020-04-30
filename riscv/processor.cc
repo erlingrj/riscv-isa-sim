@@ -469,7 +469,7 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
             if(!is_marked) {
               rdt_marked[rs1[i]] = true;
               if (ibda_p.trace_level > 0) {
-                fprintf(stdout, "ibda added rs1 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs1[i], pc, instruction_pc[i]);
+                fprintf(stderr, "ibda added rs1 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs1[i], pc, instruction_pc[i]);
               }
               if (ibda_p.dump_load_slice_instruction_trace) {
                fprintf(stderr, "pc " "0x%016" PRIx64 " inst %x\n", pc, insn);
@@ -506,12 +506,12 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
             if(!is_marked) {
               rdt_marked[rs2[i]] = true;
               if (ibda_p.trace_level > 0) {
-                fprintf(stdout, "ibda added rs1 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs2[i], pc, instruction_pc[i]);
+                fprintf(stderr, "ibda added rs1 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs2[i], pc, instruction_pc[i]);
               
               }
               
               if (ibda_p.trace_level > 0) {
-                fprintf(stdout, "ibda added rs1 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs1[i], pc, instruction_pc[i]);
+                fprintf(stderr, "ibda added rs1 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs1[i], pc, instruction_pc[i]);
               }
               
               ist_add(pc);
