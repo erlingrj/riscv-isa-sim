@@ -515,12 +515,12 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
             if(!is_marked) {
               rdt_marked[rs2[i]] = true;
               if (ibda_p.trace_level > 0) {
-                fprintf(stderr, "ibda added rs1 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs2[i], pc, instruction_pc[i]);
+                fprintf(stderr, "ibda added rs2 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs2[i], pc, instruction_pc[i]);
               
               }
               
               if (ibda_p.trace_level > 0) {
-                fprintf(stderr, "ibda added rs1 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs1[i], pc, instruction_pc[i]);
+                fprintf(stderr, "ibda added rs2 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs1[i], pc, instruction_pc[i]);
               }
               
               ist_add(pc);
@@ -535,6 +535,7 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
 
         ++i;
       }
+      // Updating RDT
       for (int i = 0; i<CORE_WIDTH; i++) {
         if(rd[i]){
           rdt[rd[i]] = instruction_pc[i];
@@ -542,6 +543,14 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
           rdt_marked[rd[i]] = ibda[i];
         }
       }
+
+       if (ibda_p.trace_level > 0) {
+          for (int i = 0; i<32; i++) {
+            fprintf(stderr, "rs%d pc:%x insn:%x\n", i, rdt[i], rdt_insn[i]);
+          }
+        }
+              
+
   
     }
 
