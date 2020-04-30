@@ -445,6 +445,7 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
     if (ibda_p.trace_level > 1) {
       fprintf(stderr, "0x%016" PRIx64 " (0xcd%08" PRIx64 ") core_idx:%d ibda:%d %s\n",
                        insn_pc, bits, core_idx, ibda[core_idx],p->disassembler->disassemble(insn).c_str());  
+      fprintf(stderr, "rs1: %d rs2: %d rd: %d\n", rs1[core_idx], rs2[core_idx], rd[core_idx]);                 
     }
     
    //fprintf(stderr, "insn_pc: 0x%016" PRIx64 " rd: %d rs1: %d rs2: %d\n", insn_pc, rd, rs1, rs2);
