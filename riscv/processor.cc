@@ -533,6 +533,7 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
       }
       // Updating RDT
       for (int i = 0; i<CORE_WIDTH; i++) {
+        printf("rd=%d\n", rd[i]);
         if(rd[i]){
           rdt[rd[i]] = instruction_pc[i];
           rdt_insn[rd[i]] = instruction_bits[i];
