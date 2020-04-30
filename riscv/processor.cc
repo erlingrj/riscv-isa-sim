@@ -365,6 +365,10 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
   void state_t::ist_add(reg_t addr){
     if (ibda_p.ist_perfect) {
       ist_tag_gm->insert({addr, 0});
+
+      if (ibda_p.trace_level > 0) {
+          fprintf(stderr, "ist adding " "0x%016" PRIx64 "\n", addr);
+        }
     } else if (ibda_p.ist_fully_associative) {
         
       std::list<reg_t>::iterator it = std::find(ist_tag_fa->begin(), ist_tag_fa->end(), addr);
