@@ -465,7 +465,7 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
             if(!is_marked) {
               rdt_marked[rs1[i]] = true;
               if (ibda_p.trace_level > 0) {
-                fprintf(stderr, "ibda added rs1 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs1[i], pc, instruction_pc[i]);
+                fprintf(stdout, "ibda added rs1 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs1[i], pc, instruction_pc[i]);
               }
               ist_add(pc);
               // avoid unnecessary rdt additions
@@ -498,7 +498,7 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
             if(!is_marked) {
               rdt_marked[rs2[i]] = true;
               if (ibda_p.trace_level > 0) {
-                fprintf(stderr, "ibda added rs1 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs2[i], pc, instruction_pc[i]);
+                fprintf(stdout, "ibda added rs1 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs2[i], pc, instruction_pc[i]);
               
               }
               ist_add(pc);
@@ -1088,7 +1088,7 @@ reg_t processor_t::get_csr(int which)
   }
   if(which == CSR_MHPMCOUNTER7 || which == CSR_HPMCOUNTER7) {
     // Print out IST size
-    fprintf(stderr, "%lu false-positives\n%lu false-negatives\n", state.false_positives, state.false_negatives);
+    fprintf(stdout, "%lu false-positives\n%lu false-negatives\n", state.false_positives, state.false_negatives);
     
     return 0;
   }
