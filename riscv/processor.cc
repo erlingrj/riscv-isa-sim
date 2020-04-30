@@ -249,6 +249,7 @@ void state_t::init_ibda(){
     agi[core_idx] = 0;
     ibda[core_idx] = 0;
     instruction_pc[core_idx] = 0;
+    instruction_bits[core_idx] = 0;
     store[core_idx] = false;
     load[core_idx] = false;
     amo[core_idx] = false;
@@ -436,6 +437,7 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
     ibda[core_idx] = ((load[core_idx] || store[core_idx] ) && !amo[core_idx]) || agi[core_idx];
     instruction_pc[core_idx] = insn_pc;
     uint64_t bits = insn.bits() & ((1ULL << (8 * insn_length(insn.bits()))) - 1);
+    instruction_bits[core_idx] = bits;
     if (ibda_p.trace_level > 0) {
       fprintf(stderr, "0x%016" PRIx64 " (0xcd%08" PRIx64 ") core_idx:%d ibda:%d %s\n",
                        insn_pc, bits, core_idx, ibda[core_idx],p->disassembler->disassemble(insn).c_str());  
@@ -453,11 +455,13 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
           if(rs1[i]) {
             bool is_marked = rdt_marked[rs1[i]];
             reg_t pc = rdt[rs1[i]];
+            reg_t insn = rdt_insn[rs1[i]];
             // If we have a bypassable queue. We have to check previous
             // candidates
             for(size_t j = 0; j<i; ++j) {
               if (rdt_bypass[j] == rs1[i]) {
                 pc = instruction_pc[j];
+                insn = instruction_bits[j];
                 is_marked = rdt_marked_bypass[j];
               }
             }
@@ -467,13 +471,15 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
               if (ibda_p.trace_level > 0) {
                 fprintf(stdout, "ibda added rs1 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs1[i], pc, instruction_pc[i]);
               }
+              if (ibda_p.dump_load_slice_instruction_trace) {
+               fprintf(stderr, "pc 0x%016" PRIx64 " inst 0x%016" PRIx64 "\n", pc, insn);
+              }
+
               ist_add(pc);
               // avoid unnecessary rdt additions
               mark_cnt++;
 
-              if (ibda_p.dump_load_slice_instruction_trace) {
-                fprintf(stderr, "ibda: pc: %x inst: %x\n", pc,insn.bits());
-              }
+ 
 
             }
           
@@ -486,11 +492,13 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
           if(rs2[i] && (!store[i] || amo[i]))  {
             bool is_marked = rdt_marked[rs2[i]];
             reg_t pc = rdt[rs2[i]];
+            reg_t insn = rdt_insn[rs2[i]];
             // If we have a bypassable queue. We have to check previous
             // candidates
               for(size_t j = 0; j<i; ++j) {
                 if (rdt_bypass[j] == rs2[i]) {
                   pc = instruction_pc[j];
+                  insn = instruction_bits[j];
                   is_marked = rdt_marked_bypass[j];
                 }
               }
@@ -501,13 +509,16 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
                 fprintf(stdout, "ibda added rs1 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs2[i], pc, instruction_pc[i]);
               
               }
+              
+              if (ibda_p.trace_level > 0) {
+                fprintf(stdout, "ibda added rs1 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs1[i], pc, instruction_pc[i]);
+              }
+              
               ist_add(pc);
               // avoid unnecessary rdt additions
               mark_cnt++;
             
-              if (ibda_p.dump_load_slice_instruction_trace) {
-                fprintf(stderr, "ibda: pc: %x inst: %x\n", pc,insn.bits());
-              }
+              
             }
           
           }
@@ -518,6 +529,7 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
       for (int i = 0; i<CORE_WIDTH; i++) {
         if(rd[i]){
           rdt[rd[i]] = instruction_pc[i];
+          rdt_insn[rd[i]] = instruction_bits[i];
           rdt_marked[rd[i]] = ibda[i];
         }
       }

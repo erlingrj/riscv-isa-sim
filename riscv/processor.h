@@ -278,7 +278,9 @@ struct state_t
   bool agi[CORE_WIDTH];
   bool ibda[CORE_WIDTH];
   reg_t instruction_pc[CORE_WIDTH];
+  reg_t instruction_bits[CORE_WIDTH];
   reg_t rdt[32];
+  reg_t rdt_insn[32];
   bool rdt_marked[32];
 
   reg_t rdt_bypass[CORE_WIDTH];
