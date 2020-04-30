@@ -366,9 +366,6 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
     if (ibda_p.ist_perfect) {
       ist_tag_gm->insert({addr, 0});
 
-      if (ibda_p.trace_level > 0) {
-          fprintf(stderr, "ist adding " "0x%016" PRIx64 "\n", addr);
-        }
     } else if (ibda_p.ist_fully_associative) {
         
       std::list<reg_t>::iterator it = std::find(ist_tag_fa->begin(), ist_tag_fa->end(), addr);
@@ -444,8 +441,7 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
     instruction_bits[core_idx] = bits;
     if (ibda_p.trace_level > 1) {
       fprintf(stderr, "0x%016" PRIx64 " (0xcd%08" PRIx64 ") core_idx:%d ibda:%d %s\n",
-                       insn_pc, bits, core_idx, ibda[core_idx],p->disassembler->disassemble(insn).c_str());  
-      fprintf(stderr, "rs1: %d rs2: %d rd: %d\n", rs1[core_idx], rs2[core_idx], rd[core_idx]);                 
+                       insn_pc, bits, core_idx, ibda[core_idx],p->disassembler->disassemble(insn).c_str());               
     }
     
    //fprintf(stderr, "insn_pc: 0x%016" PRIx64 " rd: %d rs1: %d rs2: %d\n", insn_pc, rd, rs1, rs2);
@@ -478,7 +474,7 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
                 fprintf(stderr, "ibda added rs1 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs1[i], pc, instruction_pc[i]);
               }
               if (ibda_p.dump_load_slice_instruction_trace) {
-               fprintf(stderr, "pc " "0x%016" PRIx64 " inst %x\n", pc, insn);
+               fprintf(stderr, "pc " "0x%016" PRIx64 " inst 0x%016" PRIx64 "\n", pc, insn);
               }
 
               ist_add(pc);
@@ -516,15 +512,15 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
               
               }
               
-              if (ibda_p.trace_level > 0) {
-                fprintf(stderr, "ibda added rs2 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs1[i], pc, instruction_pc[i]);
+              if (ibda_p.dump_load_slice_instruction_trace) {
+               fprintf(stderr, "pc " "0x%016" PRIx64 " inst 0x%016" PRIx64 "\n", pc, insn);
               }
+
               
               ist_add(pc);
               // avoid unnecessary rdt additions
               mark_cnt++;
-            
-              
+                      
             }
           
           }
@@ -534,23 +530,12 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
       }
       // Updating RDT
       for (int i = 0; i<CORE_WIDTH; i++) {
-        printf("rd=%d\n", rd[i]);
         if(rd[i]){
           rdt[rd[i]] = instruction_pc[i];
           rdt_insn[rd[i]] = instruction_bits[i];
           rdt_marked[rd[i]] = ibda[i];
-          fprintf(stderr, "rs%d pc:%x insn:%x\n", i, instruction_pc[i], instruction_bits[i]);
         }
-      }
-
-       if (ibda_p.trace_level > 0) {
-          for (int i = 0; i<32; i++) {
-            fprintf(stderr, "rs%d pc:%x insn:%x\n", i, rdt[i], rdt_insn[i]);
-          }
-        }
-              
-
-  
+      }              
     }
 
 
