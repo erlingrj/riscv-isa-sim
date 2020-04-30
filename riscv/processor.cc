@@ -472,7 +472,7 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
               mark_cnt++;
 
               if (ibda_p.dump_load_slice_instruction_trace) {
-                fprintf(stderr, "ibda: " "pc: 0x%016" PRIx64 "inst: %x""\n", pc,insn.bits());
+                fprintf(stderr, "ibda: pc: %x inst: %x\n", pc,insn.bits());
               }
 
             }
