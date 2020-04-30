@@ -406,6 +406,8 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
         ist_tag_gm->insert({addr, 0});
       }
     }
+
+
   }
 
   void state_t::vb_add(reg_t addr) {
@@ -468,6 +470,11 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
               ist_add(pc);
               // avoid unnecessary rdt additions
               mark_cnt++;
+
+              if (ibda_p.dump_load_slice_instruction_trace) {
+                fprintf(stderr, "ibda: " "pc: 0x%016" PRIx64 " " "inst: 0x%16" PRIx16 "\n", pc,bits);
+              }
+
             }
           
           }
@@ -497,6 +504,10 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
               ist_add(pc);
               // avoid unnecessary rdt additions
               mark_cnt++;
+            
+              if (ibda_p.dump_load_slice_instruction_trace) {
+                fprintf(stderr, "ibda: " "pc: 0x%016" PRIx64 " " "inst: 0x%16" PRIx16 "\n", pc,bits);
+              }
             }
           
           }

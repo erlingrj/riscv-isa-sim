@@ -15,6 +15,8 @@ struct ibda_params {
     bool ibda_ist_hash_xor_david;
     reg_t ibda_tag_bits;
     reg_t trace_level;
+    bool dump_instruction_trace;
+    bool dump_load_slice_instruction_trace;
   };
 
 #endif
