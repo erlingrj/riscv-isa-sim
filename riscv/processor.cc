@@ -585,7 +585,7 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
     } else {
         a_cnt++;
     }
-    test_cnt_2++;
+    test_cnt2++;
 
     // write rdt last
  
