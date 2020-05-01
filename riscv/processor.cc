@@ -257,14 +257,13 @@ void state_t::reset(reg_t max_isa, struct ibda_params ibda)
   entropy_cnt = 0;
 }
 
-void state_t::update_entropy(insn_t insn, reg_t insn_pc) {
+void state_t::update_entropy(reg_t insn_bits, reg_t insn_pc) {
   
   if ( (insn_pc == (uint64_t) 2147495972) || (insn_pc == (uint64_t) 2147495970) ) {
     return;
   }
   
   entropy_cnt++;
-  reg_t insn_bits = insn.bits();
   for (int i = 0; i<32; ++i) {
     if ( ((1UL << i) & insn_bits) != 0) {
       ibda_insn_bits_entropy[i]++;
@@ -478,7 +477,7 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
     ibda[core_idx] = ((load[core_idx] || store[core_idx] ) && !amo[core_idx]) || agi[core_idx];
     instruction_pc[core_idx] = insn_pc;
     uint64_t bits = insn.bits() & ((1ULL << (8 * insn_length(insn.bits()))) - 1);
-    instruction_bits[core_idx] = bits;
+    instruction_bits[core_idx] = insn.bits();
     if (ibda_p.trace_level > 1) {
       fprintf(stderr, "0x%016" PRIx64 " (0xcd%08" PRIx64 ") core_idx:%d ibda:%d %s\n",
                        insn_pc, bits, core_idx, ibda[core_idx],p->disassembler->disassemble(insn).c_str());               
@@ -513,10 +512,10 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
               if (ibda_p.trace_level > 0) {
                 fprintf(stderr, "ibda added rs1 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs1[i], pc, instruction_pc[i]);
               }
-              if (ibda_p.dump_load_slice_instruction_trace) {
-               fprintf(stdout, "pc " "0x%016" PRIx64 " inst 0x%016" PRIx64 "\n", pc, insn);
-              }
 
+              if (ibda_p.calculate_ist_instruction_entropy) {
+                update_entropy(pc, insn);
+              }              
               ist_add(pc);
               // avoid unnecessary rdt additions
               mark_cnt++;
@@ -551,10 +550,10 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
                 fprintf(stderr, "ibda added rs2 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs2[i], pc, instruction_pc[i]);
               
               }
-              
-              if (ibda_p.dump_load_slice_instruction_trace) {
-               fprintf(stderr, "pc " "0x%016" PRIx64 " inst 0x%016" PRIx64 "\n", pc, insn);
-              }
+              if (ibda_p.calculate_ist_instruction_entropy) {
+                update_entropy(pc, insn);
+              }              
+
 
               
               ist_add(pc);

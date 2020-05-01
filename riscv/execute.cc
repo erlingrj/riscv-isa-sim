@@ -95,7 +95,7 @@ static reg_t execute_insn(processor_t* p, reg_t pc, insn_fetch_t fetch)
     p->update_histogram(pc);
 
     if (p->state.ibda_p.calculate_instruction_entropy) {
-      p->state.update_entropy(fetch.insn, pc);
+      p->state.update_entropy(fetch.insn.bits(), pc);
     }
   }
   return npc;

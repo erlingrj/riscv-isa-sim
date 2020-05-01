@@ -16,7 +16,7 @@ struct ibda_params {
     reg_t ibda_tag_bits;
     reg_t trace_level;
     bool calculate_instruction_entropy;
-    bool dump_load_slice_instruction_trace;
+    bool calculate_ist_instruction_entropy;
   };
 
 #endif
