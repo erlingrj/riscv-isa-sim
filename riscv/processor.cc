@@ -478,6 +478,7 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
     instruction_pc[core_idx] = insn_pc;
     uint64_t bits = insn.bits() & ((1ULL << (8 * insn_length(insn.bits()))) - 1);
     instruction_bits[core_idx] = insn.bits();
+    printf("insn: % length: %u" PRIu64 "\n", insn.bits(), insn.length());
     if (ibda_p.trace_level > 1) {
       fprintf(stderr, "0x%016" PRIx64 " (0xcd%08" PRIx64 ") core_idx:%d ibda:%d %s\n",
                        insn_pc, bits, core_idx, ibda[core_idx],p->disassembler->disassemble(insn).c_str());               
@@ -514,7 +515,7 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
               }
 
               if (ibda_p.calculate_ist_instruction_entropy) {
-                update_entropy(pc, insn);
+                update_entropy(insn,pc);
               }              
               ist_add(pc);
               // avoid unnecessary rdt additions
@@ -551,7 +552,7 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
               
               }
               if (ibda_p.calculate_ist_instruction_entropy) {
-                update_entropy(pc, insn);
+                update_entropy(insn, pc);
               }              
 
 
