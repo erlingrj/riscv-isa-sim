@@ -1144,20 +1144,34 @@ reg_t processor_t::get_csr(int which)
   }
   
   if(which == CSR_MHPMCOUNTER8 || which == CSR_HPMCOUNTER8) {
-    // Print out the occurrences of 1's on different bit positions
+    // RESET counter:
     for (int i = 0; i<32; i++) {
-      fprintf(stdout, "insn-bit-%i: %llu\n",i,state.ibda_insn_bits_entropy[i]);
+      state.ibda_insn_bits_entropy[i] = 0UL;
+      state.ibda_pc_bits_entropy[i] = 0UL;
     }
-    
+
+    for (int i = 0; i<64; i++) {
+      state.ibda_pc_bits_entropy[i] = 0UL;
+    }
+
+    state.false_negatives = 0;
+    state.false_positives = 0;
+    state.test_cnt = 0;
+
     return 0;
   }
 
 
   if(which == CSR_MHPMCOUNTER9 || which == CSR_HPMCOUNTER9) {
     // Print out the occurrences of 1's on different bit positions
+    for (int i = 0; i<32; i++) {
+      fprintf(stdout, "insn-bit-%i: %llu\n",i,state.ibda_insn_bits_entropy[i]);
+    }
+ 
     for (int i = 0; i<64; i++) {
       fprintf(stdout, "pc-bit-%i: %llu\n",i,state.ibda_pc_bits_entropy[i]);
     }
+
     fprintf(stdout, "test-cnt: %" PRIu64 "\n", state.test_cnt);
     fprintf(stdout, "test-cnt2: %llu\n", state.test_cnt2);
     
