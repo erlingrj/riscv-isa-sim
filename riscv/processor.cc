@@ -254,7 +254,7 @@ void state_t::reset(reg_t max_isa, struct ibda_params ibda)
   false_negatives = 0;
   false_positives = 0;
   core_idx = 0;
-  test_cnt = 0;
+  entropy_cnt = 0;
 }
 
 void state_t::update_entropy(insn_t insn, reg_t insn_pc) {
@@ -263,7 +263,7 @@ void state_t::update_entropy(insn_t insn, reg_t insn_pc) {
     return;
   }
   
-  test_cnt++;
+  entropy_cnt++;
   reg_t insn_bits = insn.bits();
   for (int i = 0; i<32; ++i) {
     if ( ((1UL << i) & insn_bits) != 0) {
@@ -1161,7 +1161,7 @@ reg_t processor_t::get_csr(int which)
 
     state.false_negatives = 0;
     state.false_positives = 0;
-    state.test_cnt = 0;
+    state.entropy_cnt = 0;
     state.test_cnt2 = 0;
 
     return 0;
@@ -1171,14 +1171,14 @@ reg_t processor_t::get_csr(int which)
   if(which == CSR_MHPMCOUNTER9 || which == CSR_HPMCOUNTER9) {
     // Print out the occurrences of 1's on different bit positions
     for (int i = 0; i<32; i++) {
-      fprintf(stdout, "insn-bit-%i: %llu\n",i,state.ibda_insn_bits_entropy[i]);
+      fprintf(stdout, "insn-bit-%i: %" PRIu64 "\n",i,state.ibda_insn_bits_entropy[i]);
     }
  
     for (int i = 0; i<64; i++) {
-      fprintf(stdout, "pc-bit-%i: %llu\n",i,state.ibda_pc_bits_entropy[i]);
+      fprintf(stdout, "pc-bit-%i: %" PRIu64 "\n",i,state.ibda_pc_bits_entropy[i]);
     }
 
-    fprintf(stdout, "test-cnt: %" PRIu64 "\n", state.test_cnt);
+    fprintf(stdout, "entropy-cnt: %" PRIu64 "\n", state.entropy_cnt);
     fprintf(stdout, "test-cnt2: %llu\n", state.test_cnt2);
     
     return 0;
