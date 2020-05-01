@@ -239,16 +239,16 @@ void state_t::reset(reg_t max_isa, struct ibda_params ibda)
   }
 
   if (ibda_p.calculate_instruction_entropy || ibda_p.calculate_ist_instruction_entropy) {
-     ibda_insn_bits_entropy = new reg_t[32];
-     ibda_pc_bits_entropy = new reg_t[64];
+     ibda_insn_bits_entropy = new reg_t*[32];
+     ibda_pc_bits_entropy = new reg_t*[32];
 
      for (int i = 0; i<32; i++) {
-       ibda_insn_bits_entropy[i] = 0UL;
-       ibda_pc_bits_entropy[i] = 0UL;
+       ibda_insn_bits_entropy[i] = new reg_t[32];
      }
-     for (int i =32; i<64; i++) {
-       ibda_pc_bits_entropy[i] = 0UL;
+     for (int i =0; i<32; i++) {
+       ibda_pc_bits_entropy[i] = new reg_t[32];
      }
+
   }
 
   false_negatives = 0;
@@ -266,16 +266,21 @@ void state_t::update_entropy(reg_t insn_bits, reg_t insn_pc) {
   entropy_cnt++;
   for (int i = 0; i<32; ++i) {
     if ( ((1UL << i) & insn_bits) != 0) {
-      ibda_insn_bits_entropy[i]++;
+      for (int j = i; j<32; ++j) {
+        if ( ((1UL << j) & insn_bits) != 0) {
+          ibda_insn_bits_entropy[i][j]++;
+        }
+      } 
     }
-    if ( ((1UL << i) & insn_pc) != 0) {
-      ibda_pc_bits_entropy[i]++;
-    }
-
   }
-  for (int i = 32; i<64; i++) {
+
+  for (int i = 0; i<32; ++i) {
     if ( ((1UL << i) & insn_pc) != 0) {
-      ibda_pc_bits_entropy[i]++;
+      for (int j = i; j<32; ++j) {
+        if ( ((1UL << j) & insn_pc) != 0) {
+          ibda_pc_bits_entropy[i][j]++;
+        }
+      } 
     }
   }
 }
@@ -1152,12 +1157,11 @@ reg_t processor_t::get_csr(int which)
 
     if (state.ibda_p.calculate_instruction_entropy || state.ibda_p.calculate_ist_instruction_entropy) {
       for (int i = 0; i<32; i++) {
-        state.ibda_insn_bits_entropy[i] = 0UL;
-        state.ibda_pc_bits_entropy[i] = 0UL;
-      }
-
-      for (int i = 0; i<64; i++) {
-        state.ibda_pc_bits_entropy[i] = 0UL;
+        for (int j = 0; j<32; j++) {
+          state.ibda_insn_bits_entropy[i][j] = 0UL;
+          state.ibda_pc_bits_entropy[i][j] = 0UL;
+        }
+        
       }
     }
     state.false_negatives = 0;
@@ -1175,11 +1179,15 @@ reg_t processor_t::get_csr(int which)
      if (state.ibda_p.calculate_instruction_entropy || state.ibda_p.calculate_ist_instruction_entropy) {
     
       for (int i = 0; i<32; i++) {
-        fprintf(stdout, "%" PRIu64 " insn-bit-%i\n",state.ibda_insn_bits_entropy[i],i);
+        for (int j = 0; j<32; j++) {
+         fprintf(stdout, "%" PRIu64 " insn-bit-%i-%i\n",state.ibda_insn_bits_entropy[i][j],i,j);
+        }
       }
   
-      for (int i = 0; i<64; i++) {
-        fprintf(stdout, "%" PRIu64 " pc-bit-%i\n",state.ibda_pc_bits_entropy[i],i);
+      for (int i = 0; i<32; i++) {
+        for (int j = 0; j<32; j++) {
+         fprintf(stdout, "%" PRIu64 " pc-bit-%i-%i\n",state.ibda_pc_bits_entropy[i][j],i,j);
+        }
       }
 
       fprintf(stdout, "%" PRIu64 " entropy-cnt\n", state.entropy_cnt);
