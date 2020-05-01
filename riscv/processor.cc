@@ -1182,7 +1182,7 @@ reg_t processor_t::get_csr(int which)
         fprintf(stdout, "%" PRIu64 " pc-bit-%i\n",state.ibda_pc_bits_entropy[i],i);
       }
 
-      fprintf(stdout, "%" PRIu64 "entropy-cnt\n", state.entropy_cnt);
+      fprintf(stdout, "%" PRIu64 " entropy-cnt\n", state.entropy_cnt);
       fprintf(stdout, "%llu test-cnt2\n", state.test_cnt2);
     }  
     return 0;
