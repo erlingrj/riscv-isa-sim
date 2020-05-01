@@ -1157,6 +1157,7 @@ reg_t processor_t::get_csr(int which)
     state.false_negatives = 0;
     state.false_positives = 0;
     state.test_cnt = 0;
+    state.test_cnt2 = 0;
 
     return 0;
   }
