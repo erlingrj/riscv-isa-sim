@@ -277,7 +277,7 @@ int main(int argc, char** argv)
   parser.option(0, "ibda_tag_bits", 1, [&](const char* s){ibda.ibda_tag_bits = atoi(s);});
   parser.option(0, "trace_level", 1, [&](const char* s){ibda.trace_level = atoi(s);});
   parser.option(0, "dump_load_slice_instruction_trace", 0, [&](const char* s){ibda.dump_load_slice_instruction_trace = true;});
-  parser.option(0, "calculation_instruction_entropy", 0, [&](const char* s){ibda.calculate_instruction_entropy = true;});
+  parser.option(0, "calculate_instruction_entropy", 0, [&](const char* s){ibda.calculate_instruction_entropy = true;});
 
 
 
