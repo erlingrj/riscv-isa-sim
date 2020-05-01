@@ -258,6 +258,11 @@ void state_t::reset(reg_t max_isa, struct ibda_params ibda)
 }
 
 void state_t::update_entropy(insn_t insn, reg_t insn_pc) {
+  
+  if ( (insn_pc == (uint64_t) 2147495972) || (insn_pc == (uint64_t) 2147495970) ) {
+    return;
+  }
+  
   test_cnt++;
   reg_t insn_bits = insn.bits();
   for (int i = 0; i<32; ++i) {
