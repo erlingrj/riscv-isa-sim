@@ -94,8 +94,8 @@ static reg_t execute_insn(processor_t* p, reg_t pc, insn_fetch_t fetch)
     }
     p->update_histogram(pc);
 
-    if (p->state.ibda_p.dump_instruction_trace) {
-      fprintf(stderr, "pc " "0x%016" PRIx64 " inst 0x%016" PRIx64 "\n", pc, fetch.insn);
+    if (p->state.ibda_p.calculate_instruction_entropy) {
+      p->state.update_entropy(fetch.insn, pc);
     }
   }
   return npc;

@@ -297,6 +297,11 @@ struct state_t
 
   std::unordered_set<reg_t> * ist_tag_gm;
 
+  // Entropy calculation stuff
+  reg_t * ibda_insn_bits_entropy;
+  reg_t * ibda_pc_bits_entropy;
+  void update_entropy(insn_t insn, reg_t insn_pc);
+
 
   struct ibda_params ibda_p;
   

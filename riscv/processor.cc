@@ -237,10 +237,36 @@ void state_t::reset(reg_t max_isa, struct ibda_params ibda)
   if (ibda_p.ist_perfect || ibda_p.ibda_compare_perfect) {
     ist_tag_gm = new std::unordered_set<reg_t>; // Use map to also store number of lookups
   }
+
+  if (ibda_p.calculate_instruction_entropy) {
+     ibda_insn_bits_entropy = new reg_t[32];
+     ibda_pc_bits_entropy = new reg_t[64];
+  }
+
   false_negatives = 0;
   false_positives = 0;
   core_idx = 0;
 }
+
+void state_t::update_entropy(insn_t insn, reg_t insn_pc) {
+  
+  reg_t insn_bits = insn.bits();
+  for (int i = 0; i<32; ++i) {
+    if ( ((1UL << i) & insn_bits) != 0) {
+      ibda_insn_bits_entropy[i]++;
+    }
+    if ( ((1UL << i) & insn_pc) != 0) {
+      ibda_pc_bits_entropy[i]++;
+    }
+
+  }
+  for (int i = 32; i<64; i++) {
+    if ( ((1UL << i) & insn_pc) != 0) {
+      ibda_pc_bits_entropy[i]++;
+    }
+  }
+}
+
 
 void state_t::init_ibda(){
     rd[core_idx] = 0;
@@ -1106,19 +1132,26 @@ reg_t processor_t::get_csr(int which)
     
     return 0;
   }
-  /*
+  
   if(which == CSR_MHPMCOUNTER8 || which == CSR_HPMCOUNTER8) {
-    // Print out the number of lookups on each
-    #ifndef IST_LRU
-    unsigned long i = 0;
-    for (auto it = state.ist->cbegin(); it != state.ist->end(); ++it) {
-      fprintf(stderr, "%lu IST_lookups-%lu\n", it->second, i);
-      ++i;
+    // Print out the occurrences of 1's on different bit positions
+    for (int i = 0; i<32; i++) {
+      fprintf(stderr, "insn-bit-%i: %lu\n",i,state.ibda_insn_bits_entropy[i]);
     }
-    #endif 
     
     return 0;
   }
+
+
+  if(which == CSR_MHPMCOUNTER9 || which == CSR_HPMCOUNTER9) {
+    // Print out the occurrences of 1's on different bit positions
+    for (int i = 0; i<64; i++) {
+      fprintf(stderr, "pc-bit-%i: %lu\n",i,state.ibda_pc_bits_entropy[i]);
+    }
+    
+    return 0;
+  }
+  /*
   if(which == CSR_MHPMCOUNTER9 || which == CSR_HPMCOUNTER9) {
     // Print the number of evictions per set
     #ifdef IST_SET_ASSOCIATIVE
