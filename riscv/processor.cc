@@ -585,6 +585,7 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
     } else {
         a_cnt++;
     }
+    test_cnt_2++;
 
     // write rdt last
  
@@ -1157,7 +1158,8 @@ reg_t processor_t::get_csr(int which)
     for (int i = 0; i<64; i++) {
       fprintf(stdout, "pc-bit-%i: %llu\n",i,state.ibda_pc_bits_entropy[i]);
     }
-    fprintf(stdout, "test-cnt: %llu\n", state.test_cnt);
+    fprintf(stdout, "test-cnt: %" PRIu64 "\n", state.test_cnt);
+    fprintf(stdout, "test-cnt2: %llu\n", state.test_cnt2);
     
     return 0;
   }
