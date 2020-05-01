@@ -241,6 +241,14 @@ void state_t::reset(reg_t max_isa, struct ibda_params ibda)
   if (ibda_p.calculate_instruction_entropy) {
      ibda_insn_bits_entropy = new reg_t[32];
      ibda_pc_bits_entropy = new reg_t[64];
+
+     for (int i = 0; i<32; i++) {
+       ibda_insn_bits_entropy[i] = 0UL;
+       ibda_pc_bits_entropy[i] = 0UL;
+     }
+     for (int i =32; i<64; i++) {
+       ibda_pc_bits_entropy[i] = 0UL;
+     }
   }
 
   false_negatives = 0;
@@ -1136,7 +1144,7 @@ reg_t processor_t::get_csr(int which)
   if(which == CSR_MHPMCOUNTER8 || which == CSR_HPMCOUNTER8) {
     // Print out the occurrences of 1's on different bit positions
     for (int i = 0; i<32; i++) {
-      fprintf(stdout, "insn-bit-%i: %lu\n",i,state.ibda_insn_bits_entropy[i]);
+      fprintf(stdout, "insn-bit-%i: %llu\n",i,state.ibda_insn_bits_entropy[i]);
     }
     
     return 0;
@@ -1146,7 +1154,7 @@ reg_t processor_t::get_csr(int which)
   if(which == CSR_MHPMCOUNTER9 || which == CSR_HPMCOUNTER9) {
     // Print out the occurrences of 1's on different bit positions
     for (int i = 0; i<64; i++) {
-      fprintf(stdout, "pc-bit-%i: %lu\n",i,state.ibda_pc_bits_entropy[i]);
+      fprintf(stdout, "pc-bit-%i: %llu\n",i,state.ibda_pc_bits_entropy[i]);
     }
     
     return 0;
