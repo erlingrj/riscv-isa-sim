@@ -304,7 +304,8 @@ struct state_t
 
 
   struct ibda_params ibda_p;
-  
+  reg_t test_cnt;
+
   reg_t a_cnt;
   reg_t b_cnt;
   reg_t load_cnt;

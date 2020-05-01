@@ -257,7 +257,7 @@ void state_t::reset(reg_t max_isa, struct ibda_params ibda)
 }
 
 void state_t::update_entropy(insn_t insn, reg_t insn_pc) {
-  
+  test_cnt++;
   reg_t insn_bits = insn.bits();
   for (int i = 0; i<32; ++i) {
     if ( ((1UL << i) & insn_bits) != 0) {
@@ -1156,6 +1156,7 @@ reg_t processor_t::get_csr(int which)
     for (int i = 0; i<64; i++) {
       fprintf(stdout, "pc-bit-%i: %llu\n",i,state.ibda_pc_bits_entropy[i]);
     }
+    fprintf(stdout, "test-cnt: %llu\n", state.test_cnt);
     
     return 0;
   }
