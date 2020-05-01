@@ -254,6 +254,7 @@ void state_t::reset(reg_t max_isa, struct ibda_params ibda)
   false_negatives = 0;
   false_positives = 0;
   core_idx = 0;
+  test_cnt = 0;
 }
 
 void state_t::update_entropy(insn_t insn, reg_t insn_pc) {
