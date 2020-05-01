@@ -500,7 +500,7 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
                 fprintf(stderr, "ibda added rs1 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs1[i], pc, instruction_pc[i]);
               }
               if (ibda_p.dump_load_slice_instruction_trace) {
-               fprintf(stderr, "pc " "0x%016" PRIx64 " inst 0x%016" PRIx64 "\n", pc, insn);
+               fprintf(stdout, "pc " "0x%016" PRIx64 " inst 0x%016" PRIx64 "\n", pc, insn);
               }
 
               ist_add(pc);
@@ -1136,7 +1136,7 @@ reg_t processor_t::get_csr(int which)
   if(which == CSR_MHPMCOUNTER8 || which == CSR_HPMCOUNTER8) {
     // Print out the occurrences of 1's on different bit positions
     for (int i = 0; i<32; i++) {
-      fprintf(stderr, "insn-bit-%i: %lu\n",i,state.ibda_insn_bits_entropy[i]);
+      fprintf(stdout, "insn-bit-%i: %lu\n",i,state.ibda_insn_bits_entropy[i]);
     }
     
     return 0;
@@ -1146,7 +1146,7 @@ reg_t processor_t::get_csr(int which)
   if(which == CSR_MHPMCOUNTER9 || which == CSR_HPMCOUNTER9) {
     // Print out the occurrences of 1's on different bit positions
     for (int i = 0; i<64; i++) {
-      fprintf(stderr, "pc-bit-%i: %lu\n",i,state.ibda_pc_bits_entropy[i]);
+      fprintf(stdout, "pc-bit-%i: %lu\n",i,state.ibda_pc_bits_entropy[i]);
     }
     
     return 0;
