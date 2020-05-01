@@ -238,7 +238,7 @@ void state_t::reset(reg_t max_isa, struct ibda_params ibda)
     ist_tag_gm = new std::unordered_set<reg_t>; // Use map to also store number of lookups
   }
 
-  if (ibda_p.calculate_instruction_entropy) {
+  if (ibda_p.calculate_instruction_entropy || ibda_p.calculate_ist_instruction_entropy) {
      ibda_insn_bits_entropy = new reg_t[32];
      ibda_pc_bits_entropy = new reg_t[64];
 
@@ -1149,15 +1149,17 @@ reg_t processor_t::get_csr(int which)
   
   if(which == CSR_MHPMCOUNTER8 || which == CSR_HPMCOUNTER8) {
     // RESET counter:
-    for (int i = 0; i<32; i++) {
-      state.ibda_insn_bits_entropy[i] = 0UL;
-      state.ibda_pc_bits_entropy[i] = 0UL;
-    }
 
-    for (int i = 0; i<64; i++) {
-      state.ibda_pc_bits_entropy[i] = 0UL;
-    }
+    if (state.ibda_p.calculate_instruction_entropy || state.ibda_p.calculate_ist_instruction_entropy) {
+      for (int i = 0; i<32; i++) {
+        state.ibda_insn_bits_entropy[i] = 0UL;
+        state.ibda_pc_bits_entropy[i] = 0UL;
+      }
 
+      for (int i = 0; i<64; i++) {
+        state.ibda_pc_bits_entropy[i] = 0UL;
+      }
+    }
     state.false_negatives = 0;
     state.false_positives = 0;
     state.entropy_cnt = 0;
@@ -1169,17 +1171,20 @@ reg_t processor_t::get_csr(int which)
 
   if(which == CSR_MHPMCOUNTER9 || which == CSR_HPMCOUNTER9) {
     // Print out the occurrences of 1's on different bit positions
-    for (int i = 0; i<32; i++) {
-      fprintf(stdout, "insn-bit-%i: %" PRIu64 "\n",i,state.ibda_insn_bits_entropy[i]);
-    }
- 
-    for (int i = 0; i<64; i++) {
-      fprintf(stdout, "pc-bit-%i: %" PRIu64 "\n",i,state.ibda_pc_bits_entropy[i]);
-    }
-
-    fprintf(stdout, "entropy-cnt: %" PRIu64 "\n", state.entropy_cnt);
-    fprintf(stdout, "test-cnt2: %llu\n", state.test_cnt2);
     
+     if (state.ibda_p.calculate_instruction_entropy || state.ibda_p.calculate_ist_instruction_entropy) {
+    
+      for (int i = 0; i<32; i++) {
+        fprintf(stdout, "insn-bit-%i: %" PRIu64 "\n",i,state.ibda_insn_bits_entropy[i]);
+      }
+  
+      for (int i = 0; i<64; i++) {
+        fprintf(stdout, "pc-bit-%i: %" PRIu64 "\n",i,state.ibda_pc_bits_entropy[i]);
+      }
+
+      fprintf(stdout, "entropy-cnt: %" PRIu64 "\n", state.entropy_cnt);
+      fprintf(stdout, "test-cnt2: %llu\n", state.test_cnt2);
+    }  
     return 0;
   }
   /*
