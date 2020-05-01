@@ -1175,7 +1175,7 @@ reg_t processor_t::get_csr(int which)
      if (state.ibda_p.calculate_instruction_entropy || state.ibda_p.calculate_ist_instruction_entropy) {
     
       for (int i = 0; i<32; i++) {
-        fprintf(stdout, "%" PRIu64 " insn-bit-%i: \n",state.ibda_insn_bits_entropy[i],i);
+        fprintf(stdout, "%" PRIu64 " insn-bit-%i\n",state.ibda_insn_bits_entropy[i],i);
       }
   
       for (int i = 0; i<64; i++) {
