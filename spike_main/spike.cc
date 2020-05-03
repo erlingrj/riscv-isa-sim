@@ -157,8 +157,8 @@ int main(int argc, char** argv)
   ibda.trace_level = 0;
   ibda.calculate_instruction_entropy = false;
   ibda.calculate_ist_instruction_entropy = false;
-  ibda.ibda_hash_pc_mask = 0xFFFFFFFFFFFFFFFF;
-  ibda.ibda_hash_insn_mask = 0xFFFFFFFFFFFFFFFF;
+  ibda.ibda_hash_pc_mask = 0xFFFFFFFF;
+  ibda.ibda_hash_insn_mask = 0xFFFFFFFF;
   ibda.ibda_simple_hash = false;
   ibda.ibda_binary_matrix_hash = false;
 
