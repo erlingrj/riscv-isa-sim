@@ -16,7 +16,7 @@ reg_t IbdaHash::combine(reg_t pc, reg_t insn) {
 
     int j = 0;
     for (int i = 0; i <64; i++) {
-        if (pc_mask & 0x01 == 0x01) {
+        if ((pc_mask & 0x01) == 0x01) {
             result |= (((pc >> i) & 0x01) << j);
             ++j;
         }

@@ -309,7 +309,7 @@ int main(int argc, char** argv)
     ibda.ist_sets = ibda.ist_sz/ibda.ist_ways;  
   }
   
-  assert(!(ibda.ibda_simple_hash && ibda.ibda_binary_matrix_hash))
+  assert(!(ibda.ibda_simple_hash && ibda.ibda_binary_matrix_hash));
 
   assert(ibda.ist_wp>0);
   assert(! (ibda.ist_set_associative && ibda.ist_fully_associative));

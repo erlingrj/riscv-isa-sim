@@ -20,10 +20,10 @@ public:
 {
     int popcnt = 0;
     for (int i = 0; i <64; i++) {
-        if (pc_mask & 0x01 == 0x01) {
+        if ((pc_mask & 0x01) == 0x01) {
             ++popcnt;
         }
-        if (insn_mask & 0x01 == 0x01) {
+        if ((insn_mask & 0x01) == 0x01) {
             ++popcnt;
         }
         pc_mask >>= 1;
