@@ -54,7 +54,7 @@ reg_t IbdaHash::combine(reg_t pc, reg_t insn) {
         }
         insn_mask >>= 1;
     }
-    printf("%i : %i\n",j,this->bits_in);
+    printf("%i %i\n", j,this->bits_in);
     assert(j == this->bits_in);
     return result;
 
@@ -120,6 +120,8 @@ reg_t IbdaHashBinaryMatrix::_hash(reg_t in) {
         }
         in >>= 1;
     }
+
+    print("hash done\n");
     return sum>>(64 - this->bits_out);
 }
 
