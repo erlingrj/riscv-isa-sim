@@ -282,8 +282,8 @@ int main(int argc, char** argv)
   parser.option(0, "trace_level", 1, [&](const char* s){ibda.trace_level = atoi(s);});
   parser.option(0, "calculate_ist_instruction_entropy", 0, [&](const char* s){ibda.calculate_ist_instruction_entropy = true;});
   parser.option(0, "calculate_instruction_entropy", 0, [&](const char* s){ibda.calculate_instruction_entropy = true;});
-  parser.option(0, "ibda_hash_pc_mask", 1, [&](const char* s){ibda.ibda_hash_pc_mask = strtol(s, NULL, 16);});
-  parser.option(0, "ibda_hash_insn_mask", 1, [&](const char* s){ibda.ibda_hash_insn_mask = strtol(s, NULL, 16);});
+  parser.option(0, "ibda_hash_pc_mask", 1, [&](const char* s){ibda.ibda_hash_pc_mask = strtoull(s, NULL, 16);});
+  parser.option(0, "ibda_hash_insn_mask", 1, [&](const char* s){ibda.ibda_hash_insn_mask = strtoull(s, NULL, 16);});
   parser.option(0, "ibda_simple_hash", 0, [&](const char* s){ibda.ibda_simple_hash = true;});
   parser.option(0, "ibda_binary_matrix_hash", 0, [&](const char* s){ibda.ibda_binary_matrix_hash = true;});
 
