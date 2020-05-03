@@ -17,6 +17,7 @@
 #include <string>
 #include <algorithm>
 #include <stdarg.h>
+#include "ibda_hash.h"
 
 #undef STATE
 #define STATE state
