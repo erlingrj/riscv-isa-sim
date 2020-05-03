@@ -121,7 +121,7 @@ reg_t IbdaHashBinaryMatrix::_hash(reg_t in) {
         in >>= 1;
     }
 
-    print("hash done\n");
+    printf("hash done\n");
     return sum>>(64 - this->bits_out);
 }
 
