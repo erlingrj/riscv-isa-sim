@@ -54,7 +54,6 @@ reg_t IbdaHash::combine(reg_t pc, reg_t insn) {
         }
         insn_mask >>= 1;
     }
-    printf("%i %i\n", j,this->bits_in);
     assert(j == this->bits_in);
     return result;
 
@@ -121,7 +120,6 @@ reg_t IbdaHashBinaryMatrix::_hash(reg_t in) {
         in >>= 1;
     }
 
-    printf("hash done\n");
     return sum>>(64 - this->bits_out);
 }
 
@@ -468,7 +466,6 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
     } else if (ibda_p.ist_set_associative) {
       reg_t tag = ibda_hash->get_tag(addr, ist_sz_bits);
       reg_t ist_index = ibda_hash->get_set_index(addr, ist_sz_bits);
-      printf("get tags done: %llu %llu\n", tag, ist_index);
       std::list<reg_t>::iterator it = std::find (ist_tag_sa[ist_index]->begin(), ist_tag_sa[ist_index]->end(),tag); 
 
       if (it != ist_tag_sa[ist_index]->end()) {
@@ -595,7 +592,8 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
    
     instruction_pc[core_idx] = insn_pc;
     uint64_t bits = insn.bits() & ((1ULL << (8 * insn_length(insn.bits()))) - 1);
-    agi[core_idx] = in_ist(ibda_hash->hash(insn_pc, bits));
+    reg_t hash = ibda_hash->hash(insn_pc, bits);
+    agi[core_idx] = in_ist(hash);
     ibda[core_idx] = ((load[core_idx] || store[core_idx] ) && !amo[core_idx]) || agi[core_idx];
     instruction_bits[core_idx] = bits;
    
@@ -605,8 +603,8 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
 
    
     if (ibda_p.trace_level > 1) {
-      fprintf(stderr, "0x%016" PRIx64 " (0xcd%08" PRIx64 ") core_idx:%d ibda:%d %s\n",
-                       insn_pc, bits, core_idx, ibda[core_idx],p->disassembler->disassemble(insn).c_str());               
+      fprintf(stderr, "0x%016" PRIx64 " (0xcd%08" PRIx64 ") hash: %llx core_idx:%d ibda:%d %s\n",
+                       insn_pc, bits, hash, core_idx, ibda[core_idx],p->disassembler->disassemble(insn).c_str());               
     }
     
    //fprintf(stderr, "insn_pc: 0x%016" PRIx64 " rd: %d rs1: %d rs2: %d\n", insn_pc, rd, rs1, rs2);
