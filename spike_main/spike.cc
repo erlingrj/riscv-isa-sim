@@ -303,6 +303,8 @@ int main(int argc, char** argv)
 
   printf("trace_level=%d\nist_sz=%lu\nist_ways=%lu\nist_wp=%lu\nibda_ist_hash_xor_david=%d\nibda_tag_bits=%d\nist_perfect=%d\nist_fully_associative=%d\nist_set_associative=%d\nist_vb=%d\nist_vb_sz=%lu\nibda_compare_perfect=%d\n",
       ibda.trace_level, ibda.ist_sz, ibda.ist_ways, ibda.ist_wp, ibda.ibda_ist_hash_xor_david, ibda.ibda_tag_bits, ibda.ist_perfect, ibda.ist_fully_associative, ibda.ist_set_associative, ibda.ist_vb, ibda.ist_vb_sz, ibda.ibda_compare_perfect);
+  
+  printf("pc_mask=%llx\ninsn_mask=%llx\n", ibda.ibda_hash_pc_mask, ibda.ibda_hash_insn_mask);
   if (ibda.ist_set_associative) {
     assert(ibda.ist_ways > 0);
     assert(ibda.ist_sz > 0);
