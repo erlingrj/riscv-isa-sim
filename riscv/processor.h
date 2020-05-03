@@ -14,6 +14,7 @@
 #include <unordered_set>
 #include <list>
 #include "ibda.h"
+#include "ibda_hash.h"
 
 // IBDA simulation tuff
 
@@ -282,6 +283,7 @@ struct state_t
   reg_t rdt[32];
   reg_t rdt_insn[32];
   bool rdt_marked[32];
+  reg_t ist_sz_bits;
 
   reg_t rdt_bypass[CORE_WIDTH];
   reg_t rdt_marked_bypass[CORE_WIDTH];
@@ -302,6 +304,9 @@ struct state_t
   reg_t ** ibda_pc_bits_entropy;
   void update_entropy(reg_t insn, reg_t insn_pc);
 
+
+  // IBDA hasher
+  IbdaHash * ibda_hash;
 
   struct ibda_params ibda_p;
   reg_t entropy_cnt;

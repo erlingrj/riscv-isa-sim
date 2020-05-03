@@ -17,6 +17,11 @@ struct ibda_params {
     reg_t trace_level;
     bool calculate_instruction_entropy;
     bool calculate_ist_instruction_entropy;
+
+    reg_t ibda_hash_pc_mask;
+    reg_t ibda_hash_insn_mask;
+    bool ibda_simple_hash;
+    bool ibda_binary_matrix_hash;
   };
 
 #endif

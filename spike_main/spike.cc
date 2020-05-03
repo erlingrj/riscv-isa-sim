@@ -157,7 +157,11 @@ int main(int argc, char** argv)
   ibda.trace_level = 0;
   ibda.calculate_instruction_entropy = false;
   ibda.calculate_ist_instruction_entropy = false;
-  
+  ibda.ibda_hash_pc_mask = 0xFFFFFFFFFFFFFFFF;
+  ibda.ibda_hash_insn_mask = 0xFFFFFFFFFFFFFFFF;
+  ibda.ibda_simple_hash = false;
+  ibda.ibda_binary_matrix_hash = false;
+
 
   auto const hartids_parser = [&](const char *s) {
     std::string const str(s);
@@ -278,6 +282,12 @@ int main(int argc, char** argv)
   parser.option(0, "trace_level", 1, [&](const char* s){ibda.trace_level = atoi(s);});
   parser.option(0, "calculate_ist_instruction_entropy", 0, [&](const char* s){ibda.calculate_ist_instruction_entropy = true;});
   parser.option(0, "calculate_instruction_entropy", 0, [&](const char* s){ibda.calculate_instruction_entropy = true;});
+  parser.option(0, "ibda_hash_pc_mask", 1, [&](const char* s){ibda.ibda_hash_pc_mask = atoi(s);});
+  parser.option(0, "ibda_hash_insn_mask", 1, [&](const char* s){ibda.ibda_hash_insn_mask = atoi(s);});
+  parser.option(0, "ibda_simple_hash", 0, [&](const char* s){ibda.ibda_simple_hash = true;});
+  parser.option(0, "ibda_binary_matrix_hash", 0, [&](const char* s){ibda.ibda_binary_matrix_hash = true;});
+
+
 
 
 
@@ -299,6 +309,8 @@ int main(int argc, char** argv)
     ibda.ist_sets = ibda.ist_sz/ibda.ist_ways;  
   }
   
+  assert(!(ibda.ibda_simple_hash && ibda.ibda_binary_matrix_hash))
+
   assert(ibda.ist_wp>0);
   assert(! (ibda.ist_set_associative && ibda.ist_fully_associative));
   assert(! (ibda.ist_perfect &&  (ibda.ist_sz>0)));
