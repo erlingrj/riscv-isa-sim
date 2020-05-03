@@ -438,7 +438,7 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
   assert(false);
   
 }
-  bool state_t::in_ist(reg_t addr){
+  bool state_t::in_ist(reg_t addr, reg_t pc){
 
  
     if (ibda_p.ist_fully_associative) {
@@ -447,7 +447,7 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
         ist_tag_fa->erase(it);
         ist_tag_fa->push_front(addr);
         if (ibda_p.ibda_compare_perfect) {
-          std::unordered_set<reg_t>::iterator in_ist = ist_tag_gm->find(addr);
+          std::unordered_set<reg_t>::iterator in_ist = ist_tag_gm->find(pc);
           if (in_ist == ist_tag_gm->end()) {
             false_positives += 1;
           }
@@ -455,7 +455,7 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
         return true;
     } else {
       if (ibda_p.ibda_compare_perfect) {
-          std::unordered_set<reg_t>::iterator in_ist = ist_tag_gm->find(addr);
+          std::unordered_set<reg_t>::iterator in_ist = ist_tag_gm->find(pc);
           if (in_ist != ist_tag_gm->end()) {
             false_negatives += 1;
           }
@@ -475,7 +475,7 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
         ist_tag_sa[ist_index]->push_front(tag);
 
         if (ibda_p.ibda_compare_perfect) {
-          std::unordered_set<reg_t>::iterator in_ist = ist_tag_gm->find(addr);
+          std::unordered_set<reg_t>::iterator in_ist = ist_tag_gm->find(pc);
           if (in_ist == ist_tag_gm->end()) {
             false_positives += 1;
           }
@@ -496,7 +496,7 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
         }
 
       if (ibda_p.ibda_compare_perfect) {
-        std::unordered_set<reg_t>::iterator in_ist = ist_tag_gm->find(addr);
+        std::unordered_set<reg_t>::iterator in_ist = ist_tag_gm->find(pc);
         if (in_ist != ist_tag_gm->end()) {
           false_negatives += 1;
         }
@@ -505,7 +505,7 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
     }
 
     } else if (ibda_p.ist_perfect) {
-      std::unordered_set<reg_t>::iterator in_ist = ist_tag_gm->find(addr);
+      std::unordered_set<reg_t>::iterator in_ist = ist_tag_gm->find(pc);
       if (in_ist != ist_tag_gm->end()) {
         return true;
       } else {
@@ -515,9 +515,9 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
   }
 
 
-  void state_t::ist_add(reg_t addr){
+  void state_t::ist_add(reg_t addr, reg_t pc){
     if (ibda_p.ist_perfect) {
-      ist_tag_gm->insert({addr, 0});
+      ist_tag_gm->insert({pc, 0});
 
     } else if (ibda_p.ist_fully_associative) {
         
@@ -531,7 +531,7 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
       ist_tag_fa->push_front(addr);
       assert(!(ist_tag_fa->size() > ibda_p.ist_sz));
       if (ibda_p.ibda_compare_perfect) { 
-        ist_tag_gm->insert({addr, 0});
+        ist_tag_gm->insert({pc, 0});
       }
     } else if (ibda_p.ist_set_associative) {
       reg_t tag = ibda_hash->get_tag(addr, ist_sz_bits);
@@ -559,7 +559,7 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
       assert(ist_tag_sa[ist_index]->size() <= ibda_p.ist_ways);
       
       if (ibda_p.ibda_compare_perfect) { 
-        ist_tag_gm->insert({addr, 0});
+        ist_tag_gm->insert({pc, 0});
       }
     }
 
@@ -567,6 +567,8 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
   }
 
   void state_t::vb_add(reg_t addr) {
+    assert(false);
+    // Fix ist_add(addr,pc)
     if (ist_victim_buffer->size() >= ibda_p.ist_vb_sz) {
           ist_victim_buffer->pop_back();
         }
@@ -579,7 +581,7 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
     if( it != ist_victim_buffer->end()) {
       // Found it in the victim buffer
       ist_victim_buffer->erase(it);
-      ist_add(addr);
+      ist_add(addr,addr);
       vb_hits += 1;
       return true;
     } else {
@@ -593,7 +595,7 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
     instruction_pc[core_idx] = insn_pc;
     uint64_t bits = insn.bits() & ((1ULL << (8 * insn_length(insn.bits()))) - 1);
     reg_t hash = ibda_hash->hash(insn_pc, bits);
-    agi[core_idx] = in_ist(hash);
+    agi[core_idx] = in_ist(hash, insn_pc);
     ibda[core_idx] = ((load[core_idx] || store[core_idx] ) && !amo[core_idx]) || agi[core_idx];
     instruction_bits[core_idx] = bits;
    
@@ -636,7 +638,7 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
               if (ibda_p.trace_level > 0) {
                 fprintf(stderr, "ibda added rs1 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs1[i], pc, instruction_pc[i]);
               }              
-              ist_add(ibda_hash->hash(pc,insn));
+              ist_add(ibda_hash->hash(pc,insn), pc);
               // avoid unnecessary rdt additions
               mark_cnt++;
 
@@ -672,7 +674,7 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
               }
                
               
-              ist_add(ibda_hash->hash(pc,insn));
+              ist_add(ibda_hash->hash(pc,insn), pc);
 
               // avoid unnecessary rdt additions
               mark_cnt++;

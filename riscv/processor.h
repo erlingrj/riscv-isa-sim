@@ -323,8 +323,8 @@ struct state_t
 
   void init_ibda();
   void update_ibda(insn_t insn, processor_t* p, reg_t insn_pc);
-  bool in_ist(reg_t addr);
-  void ist_add(reg_t addr);
+  bool in_ist(reg_t addr, reg_t pc);
+  void ist_add(reg_t addr, reg_t pc);
   bool in_vb(reg_t addr);
   void advance_core_idx();
   void vb_add(reg_t addr);
