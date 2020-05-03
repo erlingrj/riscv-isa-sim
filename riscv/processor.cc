@@ -468,7 +468,7 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
     } else if (ibda_p.ist_set_associative) {
       reg_t tag = ibda_hash->get_tag(addr, ist_sz_bits);
       reg_t ist_index = ibda_hash->get_set_index(addr, ist_sz_bits);
-
+      printf("get tags done: %llu %llu\n", tag, ist_index);
       std::list<reg_t>::iterator it = std::find (ist_tag_sa[ist_index]->begin(), ist_tag_sa[ist_index]->end(),tag); 
 
       if (it != ist_tag_sa[ist_index]->end()) {
