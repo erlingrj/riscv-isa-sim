@@ -288,7 +288,7 @@ int main(int argc, char** argv)
   parser.option(0, "ibda_hash_insn_mask", 1, [&](const char* s){ibda.ibda_hash_insn_mask = strtoull(s, NULL, 16);});
   parser.option(0, "ibda_simple_hash", 0, [&](const char* s){ibda.ibda_simple_hash = true;});
   parser.option(0, "ibda_binary_matrix_hash", 0, [&](const char* s){ibda.ibda_binary_matrix_hash = true;});
-  parser.option(0, "seed", 1, [&](const char* s){ibda.ibda_hash_insn_mask = strtoull(s, NULL, 10);});
+  parser.option(0, "seed", 1, [&](const char* s){ibda.seed = strtoull(s, NULL, 10);});
 
 
   auto argv1 = parser.parse(argv);
