@@ -137,6 +137,26 @@ TEST_CASE( "Binary Hash Matrix ", "[binary-hash-matrix]") {
     }
 }
 
+TEST_CASE("RNG") {
+    SECTION("Seeded RNG") {
+
+        /* Random number generator */
+        std::default_random_engine g1(0);
+        std::default_random_engine g2(0);
+        /* Distribution on which to apply the generator */
+        std::uniform_int_distribution<reg_t> distribution(0,0xFFFFFFFF);
+
+        int res[256] = {0};
+        int runs = 10000000;
+
+        for (int i = 0; i <runs; ++i) {
+            if (distribution(g1) != distribution(g2)) {
+                REQUIRE(false);
+            }
+        }
+    }
+}
+
 
 
 
