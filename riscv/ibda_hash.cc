@@ -50,7 +50,6 @@ reg_t IbdaHash::get_tag(reg_t hash, int set_sz) {
 reg_t IbdaHashSimple::_hash(reg_t in) {
     
     reg_t res= (in & ( (1ULL << (this->bits_out )) - 1) );
-    assert(res == in);
     return res;
 }
 
@@ -68,7 +67,7 @@ IbdaHashBinaryMatrix::IbdaHashBinaryMatrix(
         std::random_device rd;
 
         /* Random number generator */
-        std::default_random_engine generator(rd());
+        std::default_random_engine generator(seed);
         /* Distribution on which to apply the generator */
         std::uniform_int_distribution<reg_t> distribution(0,0xFFFFFFFFFFFFFFFF);
 
