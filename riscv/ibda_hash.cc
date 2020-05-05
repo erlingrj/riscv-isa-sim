@@ -30,8 +30,7 @@ reg_t IbdaHash::combine(reg_t pc, reg_t insn) {
         }
         insn_mask >>= 1;
     }
-    printf("%i : %i\n",j,this->bits_in);
-    assert(j == this->bits_in);
+        assert(j == this->bits_in);
     return result;
 
 }
@@ -76,6 +75,7 @@ IbdaHashBinaryMatrix::IbdaHashBinaryMatrix(
             this->hash_matrix[i] = distribution(generator);
         }
     } else {
+        // Not random. Make the 4 bit Matrix from i-programmer
         this->hash_matrix = new reg_t[this->bits_in];
         this->hash_matrix[0] = 0x6FFFFFFFFFFFFFFF;
         this->hash_matrix[1] = 0xAFFFFFFFFFFFFFFF;

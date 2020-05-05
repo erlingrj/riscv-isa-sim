@@ -18,6 +18,8 @@ public:
             ) 
     : bits_out(bitsOut), insn_mask(insn_mask), pc_mask(pc_mask)
 {
+    // The PC and Insn mask defines what is the number of bits 
+    //  as the input to the hash function. (Used by BinaryMatrix)
     int popcnt = 0;
     for (int i = 0; i <64; i++) {
         if ((pc_mask & 0x01) == 0x01) {
