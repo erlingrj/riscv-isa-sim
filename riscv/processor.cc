@@ -495,6 +495,7 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
    
     instruction_pc[core_idx] = insn_pc;
     uint64_t bits = insn.bits() & ((1ULL << (8 * insn_length(insn.bits()))) - 1);
+    assert(!insn_length(insn.bits()) <=4);
     reg_t hash = ibda_hash->hash(insn_pc, bits);
     agi[core_idx] = in_ist(hash, insn_pc);
     ibda[core_idx] = ((load[core_idx] || store[core_idx] ) && !amo[core_idx]) || agi[core_idx];
