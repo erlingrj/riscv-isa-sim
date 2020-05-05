@@ -354,15 +354,15 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
           }
         }
         return true;
-    } else {
-      if (ibda_p.ibda_compare_perfect) {
-          std::unordered_set<reg_t>::iterator in_ist = ist_tag_gm->find(pc);
-          if (in_ist != ist_tag_gm->end()) {
-            false_negatives += 1;
+      } else {
+        if (ibda_p.ibda_compare_perfect) {
+            std::unordered_set<reg_t>::iterator in_ist = ist_tag_gm->find(pc);
+            if (in_ist != ist_tag_gm->end()) {
+              false_negatives += 1;
+            }
           }
-        }
-      return false;
-    }
+        return false;
+      }
 
     } else if (ibda_p.ist_set_associative) {
       reg_t tag = ibda_hash->get_tag(addr, ist_sz_bits);
@@ -418,7 +418,7 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
 
   void state_t::ist_add(reg_t addr, reg_t pc){
     if (ibda_p.ist_perfect) {
-      ist_tag_gm->insert({pc, 0});
+      ist_tag_gm->insert(pc);
 
     } else if (ibda_p.ist_fully_associative) {
         
@@ -432,7 +432,7 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
       ist_tag_fa->push_front(addr);
       assert(!(ist_tag_fa->size() > ibda_p.ist_sz));
       if (ibda_p.ibda_compare_perfect) { 
-        ist_tag_gm->insert({pc, 0});
+        ist_tag_gm->insert(pc);
       }
     } else if (ibda_p.ist_set_associative) {
       reg_t tag = ibda_hash->get_tag(addr, ist_sz_bits);
@@ -460,7 +460,7 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
       assert(ist_tag_sa[ist_index]->size() <= ibda_p.ist_ways);
       
       if (ibda_p.ibda_compare_perfect) { 
-        ist_tag_gm->insert({pc, 0});
+        ist_tag_gm->insert(pc);
       }
     }
 

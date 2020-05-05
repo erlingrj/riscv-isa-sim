@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdint.h>
+#include <random>
 typedef uint64_t reg_t;
 
 #include "ibda_hash.h"
@@ -43,6 +44,38 @@ TEST_CASE( "Ibda Simple Hash", "[ibda-simple-hash]" ) {
         REQUIRE(h1.get_tag(0x64, 8) == 0x00);
 
     }
+    SECTION("Distribution") {
+        std::random_device rd;
+
+        /* Random number generator */
+        std::default_random_engine generator(rd());
+        /* Distribution on which to apply the generator */
+        std::uniform_int_distribution<reg_t> distribution(0,0xFFFFFFFF);
+
+        int res[256] = {0};
+        int runs = 10000000;
+
+        for (int i = 0; i <runs; ++i) {
+            reg_t pc = distribution(generator);
+            reg_t insn = distribution(generator);
+
+//            ++res[h8.hash(pc,insn)];
+        }
+
+        int max = 0;
+        int min = runs +1;
+        for (int i = 0; i<256; i++) {
+            if (res[i] > max) {
+                max = res[i];
+            }
+            if (res[i] < min) {
+                min = res[i];
+            }
+        }
+
+  //      printf("max=%d min=%d min/max = %f\n", max,min, ((float) min) / max);
+    }
+        
 }
 
 TEST_CASE( "Binary Hash Matrix ", "[binary-hash-matrix]") {
@@ -67,6 +100,40 @@ TEST_CASE( "Binary Hash Matrix ", "[binary-hash-matrix]") {
         for (int i =0; i<100; i++) {
             REQUIRE(h3.hash(0x800010 + i, 0x21bd9300) < 256);
         }
+    }
+
+    // Hashing 8 bits from PC and 32 bit from insn and generating total of 
+    // 8 bits
+    int bits_out = 15;
+    IbdaHashBinaryMatrix h8(bits_out,0xff, 0xffffffff,0,true);
+
+    SECTION("Uniform distribution") {
+        std::random_device rd;
+
+        /* Random number generator */
+        std::default_random_engine generator(rd());
+        /* Distribution on which to apply the generator */
+        std::uniform_int_distribution<reg_t> distribution(0,0xFF);
+
+        int m = pow(2,bits_out);
+        int res[m] = {0};
+        int runs = 10000000;
+
+        for (int i = 0; i <runs; ++i) {
+            reg_t pc = distribution(generator);
+            reg_t insn = distribution(generator);
+
+            ++res[h8.hash(pc,insn)];
+        }
+        float score= 0.0;
+        for (int i = 0; i<m; i++) {
+            score += ((float) res[i])*(((float) res[i]+1))/2;
+        }
+
+        score = score/((float) (((float) runs)/(m*2))*(runs+(2*m)-1)); 
+
+
+        printf("entropy score = %f\n", score);
     }
 }
 

@@ -14,6 +14,7 @@
 #include <memory>
 #include "../VERSION"
 #include "ibda.h"
+#include "ibda_hash.h"
 
 static void help(int exit_code = 1)
 {
