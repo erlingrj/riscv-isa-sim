@@ -309,6 +309,8 @@ int main(int argc, char** argv)
     assert(ibda.ist_sz > 0);
     ibda.ist_sets = ibda.ist_sz/ibda.ist_ways;  
   }
+
+  printf("RNG_SEED=%llu\n", ibda.seed);
   
   assert(!(ibda.ibda_simple_hash && ibda.ibda_binary_matrix_hash));
 
