@@ -84,7 +84,14 @@ private:
 };
 
 
-
+class IbdaHashNone : public IbdaHash
+{
+public:
+    IbdaHashNone(reg_t pc_mask,
+                   reg_t insn_mask
+    ) : IbdaHash(0,pc_mask, insn_mask) {}
+    reg_t _hash(reg_t in){return in;}
+};
 
 
 #endif

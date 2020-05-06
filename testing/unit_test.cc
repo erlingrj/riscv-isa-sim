@@ -78,6 +78,45 @@ TEST_CASE( "Ibda Simple Hash", "[ibda-simple-hash]" ) {
         
 }
 
+
+TEST_CASE( "IbdaHashNone", "[no-hash]") {
+     std::random_device rd;
+
+    /* Random number generator */
+    std::default_random_engine g(rd());
+    /* Distribution on which to apply the generator */
+    std::uniform_int_distribution<reg_t> d(0,0xFFFFFFFFFFFFFFFF);
+    std::uniform_int_distribution<reg_t> d2(0,0xFFFFFFFF);
+
+
+    SECTION("FULL PC") {
+        IbdaHashNone h1(0xFFFFFFFFFFFFFFFF, 0x00);
+
+        for (int i = 0; i<10000; ++i) {
+            reg_t pc = d(g);
+            reg_t hash = h1.hash(pc, d(g));
+            REQUIRE(pc==hash);
+        }
+    }
+
+    SECTION("BOOM") {
+        IbdaHashNone h2(0x3E, 0xFFFFFFFF);
+        for (int i = 0; i<10000; ++i) {
+            reg_t pc = d2(g);
+            reg_t insn = d2(g);
+            reg_t hash = h2.hash(pc,insn);
+            reg_t res = ((insn << 5) | ((pc >> 1) & 0x1F));
+            if (hash != res) {
+                printf("pc=%lx insn=%lx\n",pc,insn);
+            }
+
+            REQUIRE(hash == res);
+        }
+    }
+
+}
+
+
 TEST_CASE( "Binary Hash Matrix ", "[binary-hash-matrix]") {
     IbdaHashBinaryMatrix h1(3,0x0,0xF,0,false);
     IbdaHashBinaryMatrix h2(6,0x0,0xFF, 0,true);
@@ -143,17 +182,25 @@ TEST_CASE("RNG") {
         /* Random number generator */
         std::default_random_engine g1(0);
         std::default_random_engine g2(0);
+        std::default_random_engine g3(12345);
+
         /* Distribution on which to apply the generator */
         std::uniform_int_distribution<reg_t> distribution(0,0xFFFFFFFF);
 
         int res[256] = {0};
-        int runs = 10000000;
+        int runs = 100;
 
         for (int i = 0; i <runs; ++i) {
+           // printf("rng=%d\n", distribution(g3));
             if (distribution(g1) != distribution(g2)) {
                 REQUIRE(false);
             }
         }
+
+        std::default_random_engine g4(123456);
+
+        REQUIRE(distribution(g3) != distribution(g4));
+
     }
 }
 
