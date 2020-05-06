@@ -164,7 +164,7 @@ int main(int argc, char** argv)
   ibda.ibda_binary_matrix_hash = false;
   ibda.ibda_no_hash = false;
   ibda.seed = 0;
-
+  ibda.count_wp_usage = false;
 
   auto const hartids_parser = [&](const char *s) {
     std::string const str(s);
@@ -291,6 +291,7 @@ int main(int argc, char** argv)
   parser.option(0, "ibda_binary_matrix_hash", 0, [&](const char* s){ibda.ibda_binary_matrix_hash = true;});
   parser.option(0, "seed", 1, [&](const char* s){ibda.seed = strtoull(s, NULL, 10);});
   parser.option(0, "ibda_no_hash", 0, [&](const char* s){ibda.ibda_no_hash = true;});
+  parser.option(0, "count_wp_usage", 0, [&](const char* s){ibda.count_wp_usage = true;});
 
 
   auto argv1 = parser.parse(argv);

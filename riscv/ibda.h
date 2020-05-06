@@ -24,6 +24,8 @@ struct ibda_params {
     bool ibda_binary_matrix_hash;
     bool ibda_no_hash;
 
+    bool count_wp_usage;
+
     reg_t seed;
   };
 

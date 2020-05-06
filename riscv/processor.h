@@ -321,6 +321,8 @@ struct state_t
   reg_t false_positives;
   reg_t false_negatives;
 
+  reg_t wp_used[5];
+
   void init_ibda();
   void update_ibda(insn_t insn, processor_t* p, reg_t insn_pc);
   bool in_ist(reg_t addr, reg_t pc);

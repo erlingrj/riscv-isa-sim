@@ -267,6 +267,8 @@ void state_t::reset(reg_t max_isa, struct ibda_params ibda)
   false_positives = 0;
   core_idx = 0;
   entropy_cnt = 0;
+  for(int i = 0; i<5; ++i) {wp_used[i] = 0;} 
+
 }
 
 void state_t::update_entropy(reg_t insn_bits, reg_t insn_pc) {
@@ -514,10 +516,9 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
     }
     
    //fprintf(stderr, "insn_pc: 0x%016" PRIx64 " rd: %d rs1: %d rs2: %d\n", insn_pc, rd, rs1, rs2);
-    
+    size_t mark_cnt = 0;
     if(core_idx == (CORE_WIDTH - 1)) {
       // Core width is "full" we can now do IBDA and emulate n-wide cores
-      size_t mark_cnt = 0;
       size_t i = 0;
       while (i < CORE_WIDTH && mark_cnt <ibda_p.ist_wp) {
         if(ibda[i]){
@@ -598,6 +599,10 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
           rdt_marked[rd[i]] = ibda[i];
         }
       }              
+    }
+
+    if (ibda_p.count_wp_usage) {
+      wp_used[mark_cnt]++;
     }
 
 
@@ -1186,7 +1191,7 @@ reg_t processor_t::get_csr(int which)
     state.false_positives = 0;
     state.entropy_cnt = 0;
     state.test_cnt2 = 0;
-
+    for(int i= 0; i<5; i++) {state.wp_used[i] = 0;}
     return 0;
   }
 
@@ -1210,7 +1215,14 @@ reg_t processor_t::get_csr(int which)
 
       fprintf(stdout, "%" PRIu64 " entropy-cnt\n", state.entropy_cnt);
       fprintf(stdout, "%llu test-cnt2\n", state.test_cnt2);
-    }  
+    } 
+
+    if(state.ibda_p.count_wp_usage) {
+      for(int i = 0; i<5; i++) {
+        fprintf(stdout, "%" PRIu64 " wp_used-%i\n", state.wp_used[i], i);
+      }
+    }
+
     return 0;
   }
   /*
