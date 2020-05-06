@@ -258,10 +258,12 @@ void state_t::reset(reg_t max_isa, struct ibda_params ibda)
     ibda_hash = new IbdaHashBinaryMatrix(ibda_p.ibda_tag_bits, ibda_p.ibda_hash_pc_mask, ibda_p.ibda_hash_insn_mask, ibda_p.seed, true);
   } else if( ibda_p.ibda_simple_hash) {
     ibda_hash = new IbdaHashSimple(ibda_p.ibda_tag_bits, ibda_p.ibda_hash_pc_mask, ibda_p.ibda_hash_insn_mask);
+  } else if ( ibda_p.ibda_no_hash) {
+    ibda_hash = new IbdaHashNone(ibda_p.ibda_hash_pc_mask, ibda_p.ibda_hash_insn_mask);
   }
 
-
   false_negatives = 0;
+
   false_positives = 0;
   core_idx = 0;
   entropy_cnt = 0;

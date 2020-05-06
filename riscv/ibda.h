@@ -22,6 +22,7 @@ struct ibda_params {
     reg_t ibda_hash_insn_mask;
     bool ibda_simple_hash;
     bool ibda_binary_matrix_hash;
+    bool ibda_no_hash;
 
     reg_t seed;
   };
