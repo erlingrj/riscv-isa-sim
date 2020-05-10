@@ -331,7 +331,9 @@ int main(int argc, char** argv)
   if (ibda.ibda_hash_bloom) {
     assert(ibda.bloom_m > 0 && ibda.bloom_m <= 2048);
     assert(ibda.bloom_k > 0);
+    printf("check\n");
     assert(ibda.bloom_fp_rate > 0.0);
+    printf("point\n");
   }        
  
 
