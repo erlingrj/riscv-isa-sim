@@ -15,6 +15,7 @@
 #include <list>
 #include "ibda.h"
 #include "ibda_hash.h"
+#include "bloom.h"
 
 // IBDA simulation tuff
 
@@ -217,6 +218,7 @@ class vectorUnit_t {
 //#define IST_SIZE 128
 //#define IST_WRITE_PORTS 4
 #define CORE_WIDTH 2
+
 //#define RDT_MARKED_BIT
 //#define RDT_BYPASSABLE
 
@@ -308,6 +310,9 @@ struct state_t
   // IBDA hasher
   IbdaHash * ibda_hash;
 
+  // Bloom filter
+  BloomFilter *bloom_filter;
+
   struct ibda_params ibda_p;
   reg_t entropy_cnt;
   reg_t test_cnt2;
@@ -320,6 +325,7 @@ struct state_t
   reg_t load_store_cnt;
   reg_t false_positives;
   reg_t false_negatives;
+  reg_t bloom_flushes;
 
   reg_t wp_used[5];
 

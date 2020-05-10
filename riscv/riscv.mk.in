@@ -30,7 +30,8 @@ riscv_hdrs = \
 	remote_bitbang.h \
 	jtag_dtm.h \
 	ibda.h \
-	ibda_hash.h
+	ibda_hash.h \
+	bloom.h
 
 riscv_install_hdrs = mmio_plugin.h
 
@@ -58,7 +59,8 @@ riscv_srcs = \
 	remote_bitbang.cc \
 	jtag_dtm.cc \
 	$(riscv_gen_srcs) \
-	ibda_hash.cc
+	ibda_hash.cc \
+	bloom.cc
 
 riscv_test_srcs =
 

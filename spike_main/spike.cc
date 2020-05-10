@@ -292,6 +292,10 @@ int main(int argc, char** argv)
   parser.option(0, "seed", 1, [&](const char* s){ibda.seed = strtoull(s, NULL, 10);});
   parser.option(0, "ibda_no_hash", 0, [&](const char* s){ibda.ibda_no_hash = true;});
   parser.option(0, "count_wp_usage", 0, [&](const char* s){ibda.count_wp_usage = true;});
+  parser.option(0, "ibda_hash_bloom", 0, [&](const char* s){ibda.ibda_hash_bloom = true;});
+  parser.option(0, "bloom_k", 1, [&](const char* s){ibda.bloom_k = strtoull(s, NULL, 10);});
+  parser.option(0, "bloom_m", 1, [&](const char* s){ibda.bloom_m = strtoull(s, NULL, 10);});
+  parser.option(0, "bloom_fp_rate", 1, [&](const char* s){ibda.bloom_fp_rate = strtof(s, NULL);});
 
 
   auto argv1 = parser.parse(argv);
@@ -321,6 +325,15 @@ int main(int argc, char** argv)
   assert(! (ibda.ist_set_associative && ibda.ist_fully_associative));
   assert(! (ibda.ist_perfect &&  (ibda.ist_sz>0)));
   assert(! (ibda.calculate_ist_instruction_entropy && ibda.calculate_instruction_entropy));
+
+  printf("bloom=%d\nbloom_k=%lu\nbloom_m=%lu\nbloom_fp_rate=%f\n",
+          ibda.ibda_hash_bloom, ibda.bloom_k, ibda.bloom_m, ibda.bloom_fp_rate);
+  if (ibda.ibda_hash_bloom) {
+    assert(ibda.bloom_m > 0 && ibda.bloom_m <= 2048);
+    assert(ibda.bloom_k > 0);
+    assert(ibda.bloom_fp_rate > 0.0);
+  }        
+ 
 
   sim_t s(isa, varch, nprocs, halted, start_pc, mems, plugin_devices, htif_args,
       std::move(hartids), dm_config,ibda);

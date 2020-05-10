@@ -30,7 +30,6 @@ reg_t IbdaHash::combine(reg_t pc, reg_t insn) {
         }
         insn_mask >>= 1;
     }
-        //printf("j=%d bits_in=%d\n", j, this->bits_in);
         assert(j == this->bits_in);
 
     return result;

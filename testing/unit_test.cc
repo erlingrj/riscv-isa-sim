@@ -4,9 +4,162 @@
 typedef uint64_t reg_t;
 
 #include "ibda_hash.h"
+#include "bloom.h"
 
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"
+
+
+
+
+TEST_CASE( "BloomFilter", "[bloom-filter]") {
+
+
+    SECTION("n max") {
+        BloomFilter b1(6,2048,0.001,0,true,0,0,true,NULL,NULL,NULL);
+    
+        REQUIRE(b1.get_nmax() == 778);
+    }
+
+    SECTION("Constructor") {
+        reg_t fp = 0;
+        reg_t np = 0;
+        reg_t bf = 0;
+        BloomFilter b1(
+            10,
+            1028,
+            0.01,
+            0,
+            true,
+            0xFFFFFFFFFFFFFFFF,
+            0x00,
+            true,
+            &fp,
+            &np,
+            &bf
+        );
+        // False positives work
+        b1.test_incr_fp();
+        b1.test_incr_np();
+        b1.test_incr_np();
+        REQUIRE(fp == 1);
+        REQUIRE(np == 2);
+
+        b1.flush();
+        b1.flush();
+        REQUIRE(bf == 2);
+
+    }
+
+    SECTION("Add") {
+        reg_t fp = 0;
+        reg_t np = 0;
+        reg_t bf = 0;
+        BloomFilter b1(
+            6,
+            2048,
+            0.01,
+            0,
+            true,
+            0xFFFFFFFFFFFFFFFF,
+            0x00,
+            true,
+            &fp,
+            &np,
+            &bf
+        );
+
+        b1.add(0xABCDE, 0x00);
+        REQUIRE(!b1.exists(0x63, 0x32));
+        REQUIRE(b1.exists(0xABCDE, 0x00));
+    }
+
+    SECTION("Flush") {
+        reg_t fp = 0;
+        reg_t np = 0;
+        reg_t bf = 0;
+        BloomFilter b1(
+            6,
+            2048,
+            0.001,
+            0,
+            true,
+            0xFFFFFFFFFFFFFFFF,
+            0x00,
+            true,
+            &fp,
+            &np,
+            &bf
+        );
+
+
+
+        for (int i = 0; i<779; ++i) {
+            b1.add(i,i*i);
+        }
+        REQUIRE(bf == 1);
+
+        REQUIRE(b1.get_count() == 1);
+        std::bitset<2048> ** ist = b1.get_bitset();
+        for (int i = 0; i<6; ++i) {
+            REQUIRE(ist[i]->count() == 1);
+        }
+    }
+
+    SECTION("Random exists") {
+        /* Random number generator */
+        std::default_random_engine g1(0);
+
+        /* Distribution on which to apply the generator */
+        std::uniform_int_distribution<reg_t> distribution(0,0xFFFFFFFF);
+
+        reg_t fp = 0;
+        reg_t np = 0;
+        reg_t bf = 0;
+        int k = 6;
+        int m = 2048;
+        float fp_max = 0.001;
+        int seed = 0;
+        reg_t pc_mask = 0x3F;
+        reg_t insn_mask = 0xFFFFFFFF;
+
+        BloomFilter b1(k,m,fp_max,seed,true,pc_mask,insn_mask,true,&fp,&np, &bf);
+        int n_max = b1.get_nmax();
+        reg_t pc_in[n_max];
+        reg_t insn_in[n_max];
+
+        for (int i = 0; i<n_max; ++i) {
+            pc_in[i] = distribution(g1);
+            insn_in[i] = distribution(g1);
+            b1.add(pc_in[i], insn_in[i]);
+        }
+
+        for (int i = 0; i<n_max; ++i) {
+            REQUIRE(b1.exists(pc_in[i], insn_in[i]));
+        }
+
+        REQUIRE(fp == 0);
+        REQUIRE(np == 0);
+
+        for (int i = 0; i<100000; ++i) {
+            b1.exists(distribution(g1), distribution(g1));
+        }
+
+        REQUIRE(fp > 0);
+
+        b1.add(0,0);
+        REQUIRE(bf == 1);
+
+        REQUIRE(b1.get_count() == 1);
+
+        for (int i = 0; i<n_max; ++i) {
+            b1.exists(pc_in[i], insn_in[i]);
+        }
+
+        REQUIRE(np == n_max);
+    }
+
+}
 
 
 

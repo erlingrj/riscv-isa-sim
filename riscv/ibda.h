@@ -23,10 +23,14 @@ struct ibda_params {
     bool ibda_simple_hash;
     bool ibda_binary_matrix_hash;
     bool ibda_no_hash;
+    reg_t seed;
 
     bool count_wp_usage;
 
-    reg_t seed;
+    bool ibda_hash_bloom;
+    reg_t bloom_k;
+    reg_t bloom_m;
+    float bloom_fp_rate;
   };
 
 #endif

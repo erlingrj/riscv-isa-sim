@@ -260,11 +260,27 @@ void state_t::reset(reg_t max_isa, struct ibda_params ibda)
     ibda_hash = new IbdaHashSimple(ibda_p.ibda_tag_bits, ibda_p.ibda_hash_pc_mask, ibda_p.ibda_hash_insn_mask);
   } else if ( ibda_p.ibda_no_hash) {
     ibda_hash = new IbdaHashNone(ibda_p.ibda_hash_pc_mask, ibda_p.ibda_hash_insn_mask);
+  } else if (ibda_p.ibda_hash_bloom) {
+    ibda_hash = NULL;
+    bloom_filter = new BloomFilter(
+      ibda_p.bloom_k,
+      ibda_p.bloom_m,
+      ibda_p.bloom_fp_rate,
+      ibda_p.seed,
+      true,
+      ibda_p.ibda_hash_pc_mask,
+      ibda_p.ibda_hash_insn_mask,
+      ibda_p.ibda_compare_perfect,
+      &false_positives,
+      &false_negatives,
+      &bloom_flushes
+    );
   }
 
   false_negatives = 0;
 
   false_positives = 0;
+  bloom_flushes = 0;
   core_idx = 0;
   entropy_cnt = 0;
   for(int i = 0; i<5; ++i) {wp_used[i] = 0;} 
@@ -467,9 +483,9 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
         ist_tag_gm->insert(pc);
       }
     }
-
-
   }
+
+
 
   void state_t::vb_add(reg_t addr) {
     assert(false);
@@ -499,11 +515,17 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
    
     instruction_pc[core_idx] = insn_pc;
     uint64_t bits = insn.bits() & ((1ULL << (8 * insn_length(insn.bits()))) - 1);
-    assert(!insn_length(insn.bits()) <=4);
-    reg_t hash = ibda_hash->hash(insn_pc, bits);
-    agi[core_idx] = in_ist(hash, insn_pc);
-    ibda[core_idx] = ((load[core_idx] || store[core_idx] ) && !amo[core_idx]) || agi[core_idx];
-    instruction_bits[core_idx] = bits;
+    reg_t hash = 0;
+    assert(!(insn_length(insn.bits()) <=4));
+    if (ibda_p.ibda_hash_bloom) {
+      agi[core_idx] = bloom_filter->exists(insn_pc, bits);
+
+    } else {
+      hash = ibda_hash->hash(insn_pc, bits);
+      agi[core_idx] = in_ist(hash, insn_pc);
+    }
+      ibda[core_idx] = ((load[core_idx] || store[core_idx] ) && !amo[core_idx]) || agi[core_idx];
+       instruction_bits[core_idx] = bits;
    
    if (agi[core_idx] && ibda_p.calculate_ist_instruction_entropy) {
       update_entropy(bits, insn_pc);
@@ -543,11 +565,13 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
               if (ibda_p.trace_level > 0) {
                 fprintf(stderr, "ibda added rs1 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs1[i], pc, instruction_pc[i]);
               }              
-              ist_add(ibda_hash->hash(pc,insn), pc);
+              if (ibda_p.ibda_hash_bloom) {
+                bloom_filter->add(pc,insn);
+              } else {
+                ist_add(ibda_hash->hash(pc,insn), pc);
+              }
               // avoid unnecessary rdt additions
               mark_cnt++;
-
- 
 
             }
           
@@ -577,9 +601,11 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
                 fprintf(stderr, "ibda added rs2 %d: 0x%016" PRIx64 " by: 0x%016" PRIx64 "\n", rs2[i], pc, instruction_pc[i]);
               
               }
-               
-              
-              ist_add(ibda_hash->hash(pc,insn), pc);
+              if (ibda_p.ibda_hash_bloom) {
+                bloom_filter->add(pc,insn);
+              } else {
+                ist_add(ibda_hash->hash(pc,insn), pc);
+              }
 
               // avoid unnecessary rdt additions
               mark_cnt++;
@@ -1191,6 +1217,7 @@ reg_t processor_t::get_csr(int which)
     state.false_positives = 0;
     state.entropy_cnt = 0;
     state.test_cnt2 = 0;
+    state.bloom_flushes = 0;
     for(int i= 0; i<5; i++) {state.wp_used[i] = 0;}
     return 0;
   }
@@ -1221,6 +1248,10 @@ reg_t processor_t::get_csr(int which)
       for(int i = 0; i<5; i++) {
         fprintf(stdout, "%" PRIu64 " wp_used-%i\n", state.wp_used[i], i);
       }
+    }
+
+    if (state.ibda_p.ibda_hash_bloom) {
+      fprintf(stdout, "%" PRIu64 " bloom-flushes\n", state.bloom_flushes);
     }
 
     return 0;
