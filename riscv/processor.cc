@@ -742,7 +742,7 @@ void processor_t::reset(struct ibda_params ibda)
     assert(ibda.ist_sz > 0);
   }
   
-  assert(ibda.ist_set_associative || ibda.ist_fully_associative || ibda.ist_perfect);
+  assert(ibda.ibda_hash_bloom || ibda.ist_set_associative || ibda.ist_fully_associative || ibda.ist_perfect);
 
   assert(ibda.ist_wp>0);
   assert(! (ibda.ist_set_associative && ibda.ist_fully_associative));
