@@ -527,7 +527,8 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
     instruction_pc[core_idx] = insn_pc;
     uint64_t bits = insn.bits() & ((1ULL << (8 * insn_length(insn.bits()))) - 1);
     reg_t hash = 0;
-    assert(!(insn_length(insn.bits()) <=4));
+    printf("%lu %d\n", bits, insn_length(insn.bits()));
+    assert((insn_length(insn.bits()) <=4));
     if (ibda_p.ibda_hash_bloom) {
       agi[core_idx] = bloom_filter->exists(insn_pc, bits);
 
