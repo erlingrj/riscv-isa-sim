@@ -43,7 +43,6 @@ processor_t::processor_t(const char* isa, const char* varch, simif_t* sim,
   : debug(false), halt_request(false), sim(sim), ext(NULL), id(id),
   halt_on_reset(halt_on_reset), last_pc(1), executions(1)
 {
-  printf("CHECK2\n");
 
   VU.p = this;
   parse_isa_string(isa);
@@ -207,7 +206,6 @@ void processor_t::parse_isa_string(const char* str)
 void state_t::reset(reg_t max_isa, struct ibda_params ibda)
 {
   memset(this, 0, sizeof(*this));
-  printf("CHECK\n");
   ibda_p = ibda;
   if (!ibda_p.ibda_hash_bloom) {
     ist_sz_bits = log2(ibda_p.ist_sz/ibda_p.ist_ways);
@@ -259,7 +257,6 @@ void state_t::reset(reg_t max_isa, struct ibda_params ibda)
 
   }
 
-  printf("CHECK3= %d\n", ibda_p.ibda_hash_bloom);
 
 
   if (ibda_p.ibda_binary_matrix_hash) {
@@ -270,7 +267,6 @@ void state_t::reset(reg_t max_isa, struct ibda_params ibda)
     ibda_hash = new IbdaHashNone(ibda_p.ibda_hash_pc_mask, ibda_p.ibda_hash_insn_mask);
   } else if (ibda_p.ibda_hash_bloom) {
     ibda_hash = NULL;
-    printf("HERE: %f\n", ibda_p.bloom_fp_rate);
     bloom_filter = new BloomFilter(
       ibda_p.bloom_k,
       ibda_p.bloom_m,
@@ -285,7 +281,6 @@ void state_t::reset(reg_t max_isa, struct ibda_params ibda)
       &bloom_flushes
     );
 
-    printf("THERE\n");
   }
 
   false_negatives = 0;
@@ -527,7 +522,6 @@ reg_t state_t::ist_get_tag(reg_t addr, reg_t bits) {
     instruction_pc[core_idx] = insn_pc;
     uint64_t bits = insn.bits() & ((1ULL << (8 * insn_length(insn.bits()))) - 1);
     reg_t hash = 0;
-    printf("%lu %d\n", bits, insn_length(insn.bits()));
     assert((insn_length(insn.bits()) <=4));
     if (ibda_p.ibda_hash_bloom) {
       agi[core_idx] = bloom_filter->exists(insn_pc, bits);
