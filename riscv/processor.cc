@@ -43,6 +43,8 @@ processor_t::processor_t(const char* isa, const char* varch, simif_t* sim,
   : debug(false), halt_request(false), sim(sim), ext(NULL), id(id),
   halt_on_reset(halt_on_reset), last_pc(1), executions(1)
 {
+  printf("CHECK2\n");
+
   VU.p = this;
   parse_isa_string(isa);
   parse_varch_string(varch);
@@ -205,6 +207,7 @@ void processor_t::parse_isa_string(const char* str)
 void state_t::reset(reg_t max_isa, struct ibda_params ibda)
 {
   memset(this, 0, sizeof(*this));
+  printf("CHECK\n");
   ibda_p = ibda;
   ist_sz_bits = log2(ibda_p.ist_sz/ibda_p.ist_ways);
   misa = max_isa;
