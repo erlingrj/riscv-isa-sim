@@ -209,7 +209,9 @@ void state_t::reset(reg_t max_isa, struct ibda_params ibda)
   memset(this, 0, sizeof(*this));
   printf("CHECK\n");
   ibda_p = ibda;
-  ist_sz_bits = log2(ibda_p.ist_sz/ibda_p.ist_ways);
+  if (!ibda_p.ibda_hash_bloom) {
+    ist_sz_bits = log2(ibda_p.ist_sz/ibda_p.ist_ways);
+  }
   misa = max_isa;
   prv = PRV_M;
   pc = DEFAULT_RSTVEC;
