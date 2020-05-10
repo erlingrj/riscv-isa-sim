@@ -292,7 +292,7 @@ int main(int argc, char** argv)
   parser.option(0, "seed", 1, [&](const char* s){ibda.seed = strtoull(s, NULL, 10);});
   parser.option(0, "ibda_no_hash", 0, [&](const char* s){ibda.ibda_no_hash = true;});
   parser.option(0, "count_wp_usage", 0, [&](const char* s){ibda.count_wp_usage = true;});
-  parser.option(0, "ibda_hash_bloom", 0, [&](const char* s){ibda.ibda_hash_bloom = true;});
+  parser.option(0, "ibda_bloom_hash", 0, [&](const char* s){ibda.ibda_hash_bloom = true;});
   parser.option(0, "bloom_k", 1, [&](const char* s){ibda.bloom_k = strtoull(s, NULL, 10);});
   parser.option(0, "bloom_m", 1, [&](const char* s){ibda.bloom_m = strtoull(s, NULL, 10);});
   parser.option(0, "bloom_fp_rate", 1, [&](const char* s){ibda.bloom_fp_rate = strtof(s, NULL);});
