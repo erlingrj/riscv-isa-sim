@@ -262,6 +262,7 @@ void state_t::reset(reg_t max_isa, struct ibda_params ibda)
     ibda_hash = new IbdaHashNone(ibda_p.ibda_hash_pc_mask, ibda_p.ibda_hash_insn_mask);
   } else if (ibda_p.ibda_hash_bloom) {
     ibda_hash = NULL;
+    printf("HERE: %f\n", ibda_p.bloom_fp_rate);
     bloom_filter = new BloomFilter(
       ibda_p.bloom_k,
       ibda_p.bloom_m,
@@ -275,6 +276,8 @@ void state_t::reset(reg_t max_isa, struct ibda_params ibda)
       &false_negatives,
       &bloom_flushes
     );
+
+    printf("THERE\n");
   }
 
   false_negatives = 0;
@@ -742,8 +745,8 @@ void processor_t::reset(struct ibda_params ibda)
     assert(ibda.ist_sz > 0);
   }
   
-  assert(ibda.ibda_hash_bloom || ibda.ist_set_associative || ibda.ist_fully_associative || ibda.ist_perfect);
 
+  assert(ibda.ibda_hash_bloom || ibda.ist_set_associative || ibda.ist_fully_associative || ibda.ist_perfect);
   assert(ibda.ist_wp>0);
   assert(! (ibda.ist_set_associative && ibda.ist_fully_associative));
   assert(! (ibda.ist_perfect &&  (ibda.ist_sz>0)));
