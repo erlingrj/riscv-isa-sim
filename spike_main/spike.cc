@@ -166,6 +166,11 @@ int main(int argc, char** argv)
   ibda.seed = 0;
   ibda.count_wp_usage = false;
 
+  ibda.ibda_hash_bloom = false;
+  ibda.bloom_m =0;
+  ibda.bloom_k = 0;
+  ibda.bloom_fp_rate = 0.0;
+
   auto const hartids_parser = [&](const char *s) {
     std::string const str(s);
     std::stringstream stream(str);

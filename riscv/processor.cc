@@ -257,6 +257,9 @@ void state_t::reset(reg_t max_isa, struct ibda_params ibda)
 
   }
 
+  printf("CHECK3= %d\n", ibda_p.ibda_hash_bloom);
+
+
   if (ibda_p.ibda_binary_matrix_hash) {
     ibda_hash = new IbdaHashBinaryMatrix(ibda_p.ibda_tag_bits, ibda_p.ibda_hash_pc_mask, ibda_p.ibda_hash_insn_mask, ibda_p.seed, true);
   } else if( ibda_p.ibda_simple_hash) {
