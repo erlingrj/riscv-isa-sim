@@ -163,6 +163,7 @@ int main(int argc, char** argv)
   ibda.ibda_simple_hash = false;
   ibda.ibda_binary_matrix_hash = false;
   ibda.ibda_no_hash = false;
+  ibda.ibda_xor_hash = false;
   ibda.seed = 0;
   ibda.count_wp_usage = false;
 
@@ -296,6 +297,7 @@ int main(int argc, char** argv)
   parser.option(0, "ibda_binary_matrix_hash", 0, [&](const char* s){ibda.ibda_binary_matrix_hash = true;});
   parser.option(0, "seed", 1, [&](const char* s){ibda.seed = strtoull(s, NULL, 10);});
   parser.option(0, "ibda_no_hash", 0, [&](const char* s){ibda.ibda_no_hash = true;});
+  parser.option(0, "ibda_xor_hash", 0, [&](const char* s){ibda.ibda_xor_hash = true;});
   parser.option(0, "count_wp_usage", 0, [&](const char* s){ibda.count_wp_usage = true;});
   parser.option(0, "ibda_bloom_hash", 0, [&](const char* s){ibda.ibda_hash_bloom = true;});
   parser.option(0, "bloom_k", 1, [&](const char* s){ibda.bloom_k = strtoull(s, NULL, 10);});

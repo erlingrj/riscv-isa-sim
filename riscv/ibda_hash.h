@@ -95,4 +95,27 @@ public:
 };
 
 
+
+class IbdaHashXor : public IbdaHash
+{
+public:
+       IbdaHashXor(reg_t pc_mask,
+                   reg_t insn_mask
+    ) : IbdaHash(0,pc_mask, insn_mask) {}
+  
+    reg_t _hash(reg_t in){return in;}
+
+
+    reg_t get_set_index(reg_t hash, int set_sz) {
+        reg_t res =  (((hash >> 1) ^ (hash >> (set_sz + 1 ))) & ((1 << set_sz) - 1));
+        return res;
+    }
+
+    reg_t get_tag(reg_t hash, int set_sz) {
+        return  hash >> (set_sz + 1);
+    }
+
+    
+};
+
 #endif

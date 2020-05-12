@@ -12,6 +12,21 @@ typedef uint64_t reg_t;
 
 
 
+TEST_CASE( "XOR Hash", "[xor-hash]") {
+    SECTION("do it") {
+        IbdaHashXor h1(0xFFFFFFFFFFFFFFFF, 0x00);
+        reg_t hash = h1.hash(0xABCDE, 0xFFFFF);
+        REQUIRE(h1.get_set_index(hash,6) == 0x16);
+        REQUIRE(h1.get_tag(hash,6) == 0x1579); 
+
+        reg_t hash2 = h1.hash(0x803A466, 0xFFFFF);
+        REQUIRE(h1.get_set_index(hash2,6) == 0x3B);
+        REQUIRE(h1.get_tag(hash2,6) == 0x100748); 
+
+    }
+}
+
+
 TEST_CASE( "BloomFilter", "[bloom-filter]") {
 
 
