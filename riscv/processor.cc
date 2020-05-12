@@ -265,6 +265,8 @@ void state_t::reset(reg_t max_isa, struct ibda_params ibda)
     ibda_hash = new IbdaHashSimple(ibda_p.ibda_tag_bits, ibda_p.ibda_hash_pc_mask, ibda_p.ibda_hash_insn_mask);
   } else if ( ibda_p.ibda_no_hash) {
     ibda_hash = new IbdaHashNone(ibda_p.ibda_hash_pc_mask, ibda_p.ibda_hash_insn_mask);
+  } else if ( ibda_p.ibda_xor_hash) {
+    ibda_hash = new IbdaHashXor(ibda_p.ibda_hash_pc_mask, ibda_p.ibda_hash_insn_mask);
   } else if (ibda_p.ibda_hash_bloom) {
     ibda_hash = NULL;
     bloom_filter = new BloomFilter(
